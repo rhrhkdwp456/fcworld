@@ -80,7 +80,8 @@ app.use(express.urlencoded({extended:true}))
 let connectDB = require('./database.js')
 
 let db;
-connectDB.then((client)=>{
+const url = process.env.DB_URL
+new MongoClient(url).connect().then((client)=>{
   console.log('DB연결성공')
   db = client.db('forum');
   app.listen(process.env.PORT, () => {
@@ -118,6 +119,7 @@ function null_check(요청, 응답, next){
 app.get('/', (요청, 응답)=>{
     응답.sendFile(__dirname+'/index.html')
 })
+
 
 // /news로 접속 했을 때 html 파일 보내 주는 방법.
 // __dirname -> 현재 프로젝트 절대 경로 의미.(server.js가 담긴 폴더)
@@ -296,7 +298,7 @@ app.post('/login', async(요청,응답, next)=>{
         // 요청.logIn()이 실행되면 쿠키생성 및 쿠기 확인까지 실행됨.
         요청.logIn(user, (err)=>{
             if(err) return next(err)
-            응답.redirect('/') // 로그인 완료시 실행할 코드
+            응답.render('index_login.ejs') // 로그인 완료시 실행할 코드
         })
 
     })(요청, 응답, next)
@@ -310,8 +312,6 @@ app.get('/login', async(요청,응답)=>{
 
 })
 app.get('/mypage', async(요청,응답)=>{
-
-    
     if(요청.user == undefined){
         응답.render('login.ejs')
     }
@@ -374,7 +374,14 @@ app.get('/write', async(요청, 응답)=>{
 
 app.use('/shop', require('./routes/shop.js'))
 
-
+// 기존에 방식으로 DB에서 값을 가져오면 정확히 일치하는 제목만 가져오게됨.
+// 그런 경우 정규식 쓰면 해결 ( $regex : -> 이걸로 가져오면 그 키워드가 들어간 모든 값을 다 가져옴.)
+// 단점 : 느려터짐.
+app.get('/search', async(요청, 응답)=>{
+    let keyword = 요청.query.val
+    let result = await db.collection('post').find({title: {$regex : keyword}}).toArray()
+    응답.render('search.ejs', {posts : result})
+})
 
 
 

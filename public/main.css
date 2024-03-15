@@ -68,10 +68,23 @@ input,div {
   height: 300px;
 }
 .write-btn{
-  margin-left: 10px;
-  margin-top: 10px;
+  text-align: right;
+  margin-right: 30px;
+  padding-top: 20px;
 }
 .write-btn a{
   color: #eee;
   text-decoration: none;
+}
+.search{
+  margin-left: 5px;
+  padding: 5px;
+}
+.search-send{
+  padding: 6px 10px;
+  background: lightgrey;
+  border: none;
+  border-radius: 5px;
+  vertical-align: middle;
+  color: black;
 }
