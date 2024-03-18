@@ -177,14 +177,15 @@ passport.deserializeUser(async (user, done) =>{
 
 
 // 간단한 서버 기능 -> 누가 메인페이지 접속시 html 파일 보내주기.
-app.get('/', (요청, 응답)=>{
+app.get('/', async(요청, 응답)=>{
+    let result = await db.collection('post').find().limit(3).toArray()
     if(요청.user == undefined){
         응답.sendFile(__dirname+'/index.html')
     }
     else{
-        응답.render('index_login.ejs')
+        
+        응답.render('index_login.ejs', {result: result})
     }
-    
 })
 
 
@@ -193,11 +194,12 @@ app.get('/', (요청, 응답)=>{
 
 app.get('/home', async(요청,응답)=>{
     let result = await db.collection('post').find().limit(3).toArray()
+    console.log(result)
     if(요청.user == undefined){
         응답.sendFile(__dirname+'/index.html')
-    }
+    }   
     else{
-        응답.render('index_login.ejs', {result:result})
+        응답.render('index_login.ejs', { result : result })
     }
 })
 
@@ -215,6 +217,17 @@ app.get('/rank', (요청, 응답) =>{
 // 자바스크립트는 처리가 오래 걸리는 코든는 처리완료 기다리지 않고 다음줄 실행함. 그래서 await 써줘야됨.
 
 
+app.post('/like', async(요청, 응답)=> {
+    // 만일 post_id = 현재 글 id and user = 현재유저_id
+    await db.collection('history').insertOne(
+    {
+        post_id : new ObjectId(요청.body.id),
+        user : 요청.user._id
+    })
+    응답.redirect('back')
+    await db.collection('post').updateOne({ _id : new ObjectId(요청.body.id) }, {$inc : {like : 1}})
+})
+
 
 // DB에 post요청 받았을 때 데이터 넣는 방법.
 app.post('/add', upload.single('img1'), async (요청, 응답) => {
@@ -225,13 +238,14 @@ app.post('/add', upload.single('img1'), async (요청, 응답) => {
             await db.collection('post').insertOne(
 
                 { 
-                title : 요청.body.title, 
-                content : 요청.body.content, 
-                img : 요청.file ? 요청.file.location:'', 
-                // 삼항연산자
-                // ( 조건식 ? 조건식참일때 남길거 : 조건식거짓일때 남길거)
-                user : 요청.user._id,
-                username : 요청.user.username
+                    title : 요청.body.title, 
+                    content : 요청.body.content, 
+                    img : 요청.file ? 요청.file.location:'', 
+                    // 삼항연산자
+                    // ( 조건식 ? 조건식참일때 남길거 : 조건식거짓일때 남길거)
+                    user : 요청.user._id,
+                    username : 요청.user.username,
+                    like : 0
                 }
             )
             응답.redirect('/list')
@@ -323,16 +337,18 @@ app.get('/list/next/:id', async(요청, 응답)=>{
 
 
 app.post('/login', async(요청,응답, next)=>{
-
+    let result = await db.collection('post').find().limit(3).toArray()
     passport.authenticate('local', (error, user, info)=>{
+        
         if(error) return 응답.status(500).json(error) // 에러에 뭐가 들어오면 에러500 보내줌.
         if(!user) return 응답.status(401).json(info.message) // DB에 있는거랑 비교해봤는데 맞지 않는 경우
         
         // 밑에꺼 실행되면 세션만들기가 실행됨.
         // 요청.logIn()이 실행되면 쿠키생성 및 쿠기 확인까지 실행됨.
+        
         요청.logIn(user, (err)=>{
             if(err) return next(err)
-            응답.render('index_login.ejs') // 로그인 완료시 실행할 코드
+            응답.render('index_login.ejs', {result:result}) // 로그인 완료시 실행할 코드
         })
 
     })(요청, 응답, next)

@@ -40,6 +40,10 @@
             </h4>
             <p><%= posts[i].content %></p>
             <img src="<%= posts[i].img %>">
+            <form class="like" action="/like" method="POST">
+              <input name= "id" value="<%= posts[i]._id %>" style="display: none;">
+              <button type="submit" class="like-btn">좋아요</button>
+            </form> 
           </div>
         <% } else{%>
           <div class="list-box">
@@ -51,10 +55,14 @@
             </h4>
             <p><%= posts[i].content %></p>
             <img src="<%= posts[i].img %>">
+            <form class="like" action="/like" method="POST">
+              <input name= "id" value="<%= posts[i]._id %>" style="display: none;">
+              <button type="submit" class="like-btn">좋아요</button>
+            </form> 
           </div>
         <% } %>
       <% } %>
-      <a href="/list/next/<%= posts[posts.length-1]._id %>">다음</a>
+      <!-- <a href="/list/next/<%= posts[posts.length-1]._id %>">다음</a> -->
 
     </div> 
     <script>

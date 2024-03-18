@@ -16,16 +16,27 @@
             <div class="content">
                 <h2 style="font-weight: bold; padding-top: 30px;">FC Stagram</h2>
                 <br>
-                <% for(let i = 0;i< result.length;i++){ %>
-                    <div class="content-box">
-                        
-                        <h4 style="font-weight: bold;"><%= result[i].title %></h4>
-                        <br>
-                        <a href="/detail/<%= result[i]._id %>" style="text-decoration: none"><img src="<%= result[i].img %>" ></a>
-                        
-                        <hr style="margin-top: 60px">
-                    </div>
-                <% } %>
+                <div class="content-parent">
+                    <% for(let i = 0;i< result.length ;i++){ %>
+                        <div class="content-box">
+                            <h4 style="font-weight: bold;"><% result[i].title %></h4>
+                            <br>
+                            <a href="/detail/<%= result[i]._id %>" style="text-decoration: none"><img src="<%= result[i].img %>" ></a>
+                            <hr style="margin-top: 60px">
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+            <div class="parent" style="width: 100%; height: 600px; background: #585858;">
+                <div class="child" style="background: #2E9AFE;">
+            
+                </div>
+                <div class="child" style="background: #FA5858;">
+            
+                </div>
+                <div class="child" style="background: #81F781;">
+            
+                </div>
             </div>
             
         </div> 
