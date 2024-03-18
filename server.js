@@ -115,120 +115,7 @@ function null_check(요청, 응답, next){
 //     console.log('http://localhost:8080 에서 실행 중')
 // })
 
-// 간단한 서버 기능 -> 누가 메인페이지 접속시 html 파일 보내주기.
-app.get('/', (요청, 응답)=>{
-    응답.sendFile(__dirname+'/index.html')
-})
 
-
-// /news로 접속 했을 때 html 파일 보내 주는 방법.
-// __dirname -> 현재 프로젝트 절대 경로 의미.(server.js가 담긴 폴더)
-
-app.get('/home', async(요청,응답)=>{
-    응답.sendFile(__dirname + '/index.html')
-})
-
-
-app.get('/introduce', (요청, 응답)=>{
-    응답.sendFile(__dirname+'/introduce.html')
-})
-
-app.get('/rank', (요청, 응답) =>{
-    응답.render('rank.ejs')
-})
-
-// await -> 바로 다음줄 실행하지말고 잠깐 기다려주세요
-// 자바스크립트는 처리가 오래 걸리는 코든는 처리완료 기다리지 않고 다음줄 실행함. 그래서 await 써줘야됨.
-
-
-
-// DB에 post요청 받았을 때 데이터 넣는 방법.
-app.post('/add', upload.single('img1'), async (요청, 응답) => {
-
-    try{
-        if(요청.body.title==''){
-            응답.send('제목입력안했는데?')
-        }else{
-            await db.collection('post').insertOne(
-                { title : 요청.body.title, content : 요청.body.content , img : 요청.file.location }
-                )
-            응답.redirect('/list')
-        }
-    } catch(e){
-        console.log(e)
-        응답.status(500).send('서버에러남')
-    }
-    
-})
-
-app.get('/detail/:id', async (요청, 응답) => {
-    
-
-    try{
-        let result = await db.collection('post').findOne({ _id : new ObjectId(요청.params.id) })
-        응답.render('detail.ejs', { result : result })
-        if(result == null){
-            응답.status(404).send('이상한 url 입력함.') 
-        }
-    } catch(e){
-        console.log(e)
-        응답.status(404).send('이상한 url 입력함.') 
-        // 400 -> 유저 오류 500 -> 서버오류
-    }
-})
-
-
-app.get('/edit/:id', async(요청, 응답)=>{
-    let result = await db.collection('post').findOne({ _id : new ObjectId(요청.params.id) })  
-    응답.render('edit.ejs', { result : result })
-})
-
-
-app.put('/edit', async (요청, 응답) => {
-
-    try{
-        let result = await db.collection('post').updateOne({ _id : new ObjectId(요청.body.id)},
-        {$set : { title : 요청.body.title, content : 요청.body.content}
-        })
-        응답.redirect('/list')
-        console.log(result.matchedCount)
-    }catch(e){
-        console.log(e)
-        응답.status(404).send('이상한 url 입력함.') 
-    }
-})
-
-// await db.collection('post').updateOne({ _id : 1 }, {$inc : {like : 2}}) // inc -> 값을 + - 하는 문법
-
-
-    // 동시에 여러개 document 수정 하는방법.
-    // await db.collection('post').updateMany({ _id : 1 }, {$inc : {like : 2}})
-
-    // like 항목이 10 이상인 document 전부 수정 하는 방법
-    // await db.collection('post').updateMany({ like : {$gt :10} }, {$inc : {like : 2}}) 
-    // $gt : 10 -> like 항목이 10 이상인가 $lt는 이하 $ne는 not 효과
-
-
-app.delete('/delete', async(요청, 응답)=>{
-    
-    console.log(요청.query)
-    
-    await db.collection('post').deleteOne({ _id : new ObjectId(요청.query.docid)})
-    응답.send('삭제완료')
-    
-})
-
-app.get('/list/:id', async(요청, 응답)=>{
-    // 1번 ~ 5번글을 찾아서 result변수에 저장.
-    let result = await db.collection('post').find().skip((요청.params.id-1)*5).limit(5).toArray()// 컬렉션의 모든 document 출력 하는 법.
-    응답.render('list.ejs', { posts : result })
-})
-
-app.get('/list/next/:id', async(요청, 응답)=>{
-    // 1번 ~ 5번글을 찾아서 result변수에 저장.
-    let result = await db.collection('post').find({_id : {$gt : new ObjectId(요청.params.id)}}).limit(5).toArray()// 컬렉션의 모든 document 출력 하는 법.
-    응답.render('list.ejs', { posts : result })
-})
 
 
 // 세션 데이터를 DB에 저장하려면 connect-mongo 라이브러리 설치
@@ -285,6 +172,153 @@ passport.deserializeUser(async (user, done) =>{
     process.nextTick(() => { // 내부 코드를 비동기적으로 처리해줌
         done(null, result) // result에 저장된 값이 요청.user에 들어감.
     })
+})
+
+
+
+// 간단한 서버 기능 -> 누가 메인페이지 접속시 html 파일 보내주기.
+app.get('/', (요청, 응답)=>{
+    if(요청.user == undefined){
+        응답.sendFile(__dirname+'/index.html')
+    }
+    else{
+        응답.render('index_login.ejs')
+    }
+    
+})
+
+
+// /news로 접속 했을 때 html 파일 보내 주는 방법.
+// __dirname -> 현재 프로젝트 절대 경로 의미.(server.js가 담긴 폴더)
+
+app.get('/home', async(요청,응답)=>{
+    let result = await db.collection('post').find().limit(3).toArray()
+    if(요청.user == undefined){
+        응답.sendFile(__dirname+'/index.html')
+    }
+    else{
+        응답.render('index_login.ejs', {result:result})
+    }
+})
+
+
+app.get('/rank', (요청, 응답) =>{
+    if(요청.user == undefined){
+        응답.render('login.ejs')
+    }
+    else{
+        응답.render('rank.ejs')
+    }
+})
+
+// await -> 바로 다음줄 실행하지말고 잠깐 기다려주세요
+// 자바스크립트는 처리가 오래 걸리는 코든는 처리완료 기다리지 않고 다음줄 실행함. 그래서 await 써줘야됨.
+
+
+
+// DB에 post요청 받았을 때 데이터 넣는 방법.
+app.post('/add', upload.single('img1'), async (요청, 응답) => {
+    try{
+        if(요청.body.title==''){
+            응답.send('제목입력안했는데?')
+        }else{
+            await db.collection('post').insertOne(
+
+                { 
+                title : 요청.body.title, 
+                content : 요청.body.content, 
+                img : 요청.file ? 요청.file.location:'', 
+                // 삼항연산자
+                // ( 조건식 ? 조건식참일때 남길거 : 조건식거짓일때 남길거)
+                user : 요청.user._id,
+                username : 요청.user.username
+                }
+            )
+            응답.redirect('/list')
+        }
+    } catch(e){
+        console.log(e)
+        응답.status(500).send('서버에러남')
+    }
+    
+})
+
+app.get('/detail/:id', async (요청, 응답) => {
+    
+
+    try{
+        let comment = await db.collection('comment').find({
+            parentId : new ObjectId(요청.params.id)
+        }).toArray()
+        let result = await db.collection('post').findOne({ 
+            _id : new ObjectId(요청.params.id) 
+        })
+        응답.render('detail.ejs', { result : result , comment : comment})
+        if(result == null){
+            응답.status(404).send('이상한 url 입력함.') 
+        }
+    } catch(e){
+        console.log(e)
+        응답.status(404).send('이상한 url 입력함.') 
+        // 400 -> 유저 오류 500 -> 서버오류
+    }
+})
+
+
+app.get('/edit/:id', async(요청, 응답)=>{
+    let result = await db.collection('post').findOne({ _id : new ObjectId(요청.params.id) })  
+    응답.render('edit.ejs', { result : result })
+})
+
+
+app.put('/edit', async (요청, 응답) => {
+
+    try{
+        let result = await db.collection('post').updateOne({ 
+            _id : new ObjectId(요청.body.id),
+            user : new ObjectId(요청.user._id) //본인이 쓴글인지 확인
+        },
+        {$set : { title : 요청.body.title, content : 요청.body.content}
+        })
+        응답.redirect('/list')
+        console.log(result.matchedCount)
+    }catch(e){
+        console.log(e)
+        응답.status(404).send('이상한 url 입력함.') 
+    }
+})
+
+// await db.collection('post').updateOne({ _id : 1 }, {$inc : {like : 2}}) // inc -> 값을 + - 하는 문법
+
+
+    // 동시에 여러개 document 수정 하는방법.
+    // await db.collection('post').updateMany({ _id : 1 }, {$inc : {like : 2}})
+
+    // like 항목이 10 이상인 document 전부 수정 하는 방법
+    // await db.collection('post').updateMany({ like : {$gt :10} }, {$inc : {like : 2}}) 
+    // $gt : 10 -> like 항목이 10 이상인가 $lt는 이하 $ne는 not 효과
+
+
+app.delete('/delete', async(요청, 응답)=>{
+
+    await db.collection('post').deleteOne({
+        _id : new ObjectId(요청.query.docid),
+        user : new ObjectId(요청.user._id) //본인이 쓴글인지 확인
+        })
+    응답.send('삭제완료')
+    
+})
+
+app.get('/list/:id', async(요청, 응답)=>{
+    // 1번 ~ 5번글을 찾아서 result변수에 저장.
+    let result = await db.collection('post').find().skip((요청.params.id-1)*5).limit(5).toArray()// 컬렉션의 모든 document 출력 하는 법.
+    응답.render('list.ejs', { posts : result })
+})
+
+app.get('/list/next/:id', async(요청, 응답)=>{
+    // 1번 ~ 5번글을 찾아서 result변수에 저장.
+    let result = await db.collection('post').find({_id : {$gt : new ObjectId(요청.params.id)}}).limit(5).toArray()// 컬렉션의 모든 document 출력 하는 법.
+    응답.render('list.ejs', { posts : result })
 })
 
 
@@ -355,17 +389,25 @@ app.post('/register' , async(요청, 응답)=>{
 
 
 app.get('/list', async(요청, 응답)=>{
-    let result = await db.collection('post').find().toArray()// 컬렉션의 모든 document 출력 하는 법.
-    응답.render('list.ejs', { posts : result })
+    if(요청.user == undefined){
+        응답.render('login.ejs')
+    }
+    else{
+        let userid = 요청.user._id
+        let result = await db.collection('post').find().toArray()// 컬렉션의 모든 document 출력 하는 법.
+        응답.render('list.ejs', { posts : result , userid : userid })
 
-    // 서버 데이터를 ejs 파일에 넣으려면
-    // 1. ejs 파일로 데이터 전송
-    // 2. ejs 파일 안에서 <%=데이터이름%>
+        // 서버 데이터를 ejs 파일에 넣으려면
+        // 1. ejs 파일로 데이터 전송
+        // 2. ejs 파일 안에서 <%=데이터이름%>
+    }
+    
 })
 
 app.get('/write', async(요청, 응답)=>{
     if(!요청.user?.username){
         console.log('로그인을 해야 게시글 작성이 가능합니다.')
+        응답.render('login.ejs')
     }
     else{
         응답.render('write.ejs')
@@ -377,13 +419,44 @@ app.use('/shop', require('./routes/shop.js'))
 // 기존에 방식으로 DB에서 값을 가져오면 정확히 일치하는 제목만 가져오게됨.
 // 그런 경우 정규식 쓰면 해결 ( $regex : -> 이걸로 가져오면 그 키워드가 들어간 모든 값을 다 가져옴.)
 // 단점 : 느려터짐.
+
+// search index 만들면 우리가 원하는 검색 기능 가능!
+// 단어부분검색 가능, 검색속도 빠름.
+
+
 app.get('/search', async(요청, 응답)=>{
-    let keyword = 요청.query.val
-    let result = await db.collection('post').find({title: {$regex : keyword}}).toArray()
+
+    let 검색어 = 요청.query.val
+    let 검색조건 = [
+        {
+            $search : {
+                index : 'title_index',
+                text : { query : 검색어 , path : 'title'}
+            }
+        }
+        // {조건2}
+        // {조건3}
+        // {$sort : { _id : 1 }} -> id순으로 정렬(-1적으면 역순으로 정렬)
+        // {$sort : { 날짜 : 1 }} -> 날짜 순으로 정렬
+        // {$limit : 10} -> 검색결과수 제한
+        // {$skip:10} -> 10개 건너뛰고 가져오기
+        // {$project : {title :1}} -> title 필드 숨기기 (0이면 숨기기, 1이면 보이기)
+    ]
+
+    let result = await db.collection('post').aggregate(검색조건).toArray()
     응답.render('search.ejs', {posts : result})
 })
 
 
+app.post('/comment', async (요청, 응답) => {
+    await db.collection('comment').insertOne({
+        comment : 요청.body.content,
+        writerId : new ObjectId(요청.body._id),
+        writer : 요청.user.username,
+        parentId : new ObjectId(요청.body.parentId)
+    })
+    응답.redirect('back') // 이전페이지로 이동.
+})
 
 
 

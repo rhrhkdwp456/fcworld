@@ -33,7 +33,7 @@
       <% for(let i =0; i< posts.length ;i++){ %>
         <div class="list-box">
           <h4>
-            <a href="/detail/<%= posts[i]._id %>">
+            <a class = "list-title" href="/detail/<%= posts[i]._id %>">
               <%= posts[i].title %>
             </a>
             <a href="/edit/<%= posts[i]._id %>">✏️</a>
