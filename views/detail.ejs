@@ -15,6 +15,8 @@
     <div class="detail-bg">
         <h4><%= result.title %></h4>
         <p><%= result.content %></p>
+        <a href="/make-chat?writerId=<%= result.user %>">채팅하기</a><br>
+        
         <img src="<%= result.img %>">
         <hr style="margin-top: 60px">
         <h5 style="font-weight: bold;">댓글 <%= comment.length %>개</h5>

@@ -62,8 +62,10 @@ const upload = multer({
 })
 
 app.use(methodOverride('_method'))
+
 // 폴더를 server.js에 등록해두면 폴더안의 파일들 html에서 사용 가능.
 app.use(express.static(__dirname +'/public'))
+app.use(express.static(__dirname +'/img'))
 
 //ejs 셋팅 하는 코드
 app.set('view engine', 'ejs')
@@ -76,7 +78,6 @@ app.use(express.urlencoded({extended:true}))
 
 
 // MongoDB 연결하기 위해 하는 셋팅
-
 let connectDB = require('./database.js')
 
 let db;
@@ -109,7 +110,6 @@ function null_check(요청, 응답, next){
 }
 
 
-
 // 서버 띄우는 코드
 // app.listen(8080, () => {
 //     console.log('http://localhost:8080 에서 실행 중')
@@ -117,14 +117,15 @@ function null_check(요청, 응답, next){
 
 
 
-
 // 세션 데이터를 DB에 저장하려면 connect-mongo 라이브러리 설치
 // npm install bcrypt -> 해슁을 하기 위해서 사용하는 라이브러리 bcrypt 설치
+
 
 // 필요한 라이브러리 npm install express-session passport passport-local 
 // passport는 회원인증 도와주는 메인라이브러리,
 // passport-local은 아이디/비번 방식 회원인증쓸 때 쓰는 라이브러리
 // express-session은 세션 만드는거 도와주는 라이브러리입니다.
+
 
 // passport 라이브러리 사용하면 session 방식 기능 구현할 때 간단함.
 // session 방식
@@ -141,6 +142,7 @@ function null_check(요청, 응답, next){
 // 제출한 아이디 비번이 DB에 있는지 검사하는 로직
 // 있으면 세션만들어줌
 // 이 밑에 있는 코드를 실행하고 싶으면 passport.authenticate('local')() 쓰면 됨.
+
 passport.use(new LocalStrategy(async (입력한아이디, 입력한비번, cb) => {
     let result = await db.collection('user').findOne({ username : 입력한아이디})
     if (!result) {
@@ -176,7 +178,6 @@ passport.deserializeUser(async (user, done) =>{
 
 
 
-// 간단한 서버 기능 -> 누가 메인페이지 접속시 html 파일 보내주기.
 app.get('/', async(요청, 응답)=>{
     let result = await db.collection('post').find().limit(3).toArray()
     if(요청.user == undefined){
@@ -189,12 +190,10 @@ app.get('/', async(요청, 응답)=>{
 })
 
 
-// /news로 접속 했을 때 html 파일 보내 주는 방법.
-// __dirname -> 현재 프로젝트 절대 경로 의미.(server.js가 담긴 폴더)
 
+// __dirname -> 현재 프로젝트 절대 경로 의미.(server.js가 담긴 폴더)
 app.get('/home', async(요청,응답)=>{
     let result = await db.collection('post').find().limit(3).toArray()
-    console.log(result)
     if(요청.user == undefined){
         응답.sendFile(__dirname+'/index.html')
     }   
@@ -213,10 +212,9 @@ app.get('/rank', (요청, 응답) =>{
     }
 })
 
+
 // await -> 바로 다음줄 실행하지말고 잠깐 기다려주세요
-// 자바스크립트는 처리가 오래 걸리는 코든는 처리완료 기다리지 않고 다음줄 실행함. 그래서 await 써줘야됨.
-
-
+// 자바스크립트는 처리가 오래 걸리는 코드는 처리완료 기다리지 않고 다음줄 실행함. 그래서 await 써줘야됨.
 app.post('/like', async(요청, 응답)=> {
     // 만일 post_id = 현재 글 id and user = 현재유저_id
     await db.collection('history').insertOne(
@@ -258,8 +256,6 @@ app.post('/add', upload.single('img1'), async (요청, 응답) => {
 })
 
 app.get('/detail/:id', async (요청, 응답) => {
-    
-
     try{
         let comment = await db.collection('comment').find({
             parentId : new ObjectId(요청.params.id)
@@ -286,7 +282,6 @@ app.get('/edit/:id', async(요청, 응답)=>{
 
 
 app.put('/edit', async (요청, 응답) => {
-
     try{
         let result = await db.collection('post').updateOne({ 
             _id : new ObjectId(요청.body.id),
@@ -302,9 +297,7 @@ app.put('/edit', async (요청, 응답) => {
     }
 })
 
-// await db.collection('post').updateOne({ _id : 1 }, {$inc : {like : 2}}) // inc -> 값을 + - 하는 문법
-
-
+    // await db.collection('post').updateOne({ _id : 1 }, {$inc : {like : 2}}) // inc -> 값을 + - 하는 문법
     // 동시에 여러개 document 수정 하는방법.
     // await db.collection('post').updateMany({ _id : 1 }, {$inc : {like : 2}})
 
@@ -316,8 +309,8 @@ app.put('/edit', async (요청, 응답) => {
 app.delete('/delete', async(요청, 응답)=>{
 
     await db.collection('post').deleteOne({
-        _id : new ObjectId(요청.query.docid),
-        user : new ObjectId(요청.user._id) //본인이 쓴글인지 확인
+        _id : new ObjectId(요청.query.docid), // 게시글 아이디 확인
+        user : new ObjectId(요청.user._id) // 본인이 쓴글인지 확인
         })
     응답.send('삭제완료')
     
@@ -325,16 +318,17 @@ app.delete('/delete', async(요청, 응답)=>{
 
 app.get('/list/:id', async(요청, 응답)=>{
     // 1번 ~ 5번글을 찾아서 result변수에 저장.
+    let userid = 요청.user._id
     let result = await db.collection('post').find().skip((요청.params.id-1)*5).limit(5).toArray()// 컬렉션의 모든 document 출력 하는 법.
-    응답.render('list.ejs', { posts : result })
+    응답.render('list.ejs', { posts : result , userid : userid})
 })
 
 app.get('/list/next/:id', async(요청, 응답)=>{
     // 1번 ~ 5번글을 찾아서 result변수에 저장.
+    let userid = 요청.user._id
     let result = await db.collection('post').find({_id : {$gt : new ObjectId(요청.params.id)}}).limit(5).toArray()// 컬렉션의 모든 document 출력 하는 법.
-    응답.render('list.ejs', { posts : result })
+    응답.render('list.ejs', { posts : result , userid : userid})
 })
-
 
 app.post('/login', async(요청,응답, next)=>{
     let result = await db.collection('post').find().limit(3).toArray()
@@ -474,8 +468,39 @@ app.post('/comment', async (요청, 응답) => {
     응답.redirect('back') // 이전페이지로 이동.
 })
 
+app.get('/chat-detail', async(요청, 응답)=>{
+    응답.render('chat-detail.ejs')
+})
+// app.get('/chat-detail/:id', async(요청, 응답)=>{
+    
+//     await db.collection('chatroom').findOne({
+//         writer :요청.params.id
+//     })
+    
+//     응답.render('chat-detail.ejs')
+// })
 
+app.get('/make-chat', async(요청, 응답)=>{
+    console.log(요청.user)
+    await db.collection('chatroom').insertOne({
+        // member 안에 방문자_id와 작성자의_id 를 각각 저장
+        member : [요청.user._id, new ObjectId(요청.query.writerId)],
+        date : new Date()
+    })
+    응답.redirect('/mychat')
+})
+app.get('/mychat', async(요청, 응답)=>{
+    let result = await db.collection('chatroom').find({
+        member : 요청.user._id
+    }).toArray()
+    응답.render('mychat.ejs', { result : result })
+})
 
-
+app.get('/mychat/:id', async(요청, 응답)=>{
+    let result = await db.collection('chatroom').find({
+        member : 요청.user._id
+    }).toArray()
+    응답.render('chat-detail.ejs', { result : result })
+})
 
 
