@@ -8,6 +8,16 @@ const methodOverride = require('method-override')
 //bcrypt 라이브러리 셋팅
 const bcrypt = require('bcrypt')
 
+// socket 라이브러리 셋팅
+// const { createServer } = require('http')
+
+const { createServer } = require("node:http")
+const { Server } = require('socket.io')
+const { join } = require("node:path")
+const server = createServer(app)
+const io = new Server(server) 
+
+
 // 환경변수 따로 파일로 만들기.
 // npm install dotenv 설치
 require('dotenv').config()
@@ -22,6 +32,15 @@ const LocalStrategy = require('passport-local')
 // connect-mongo 라이브러리 셋팅
 const MongoStore = require('connect-mongo') 
 const e = require('express')
+
+const sessionMiddleware = session({
+    secret: process.env.MIDDLESESSION_PW,
+    resave: false,
+    saveUninitialized: false,
+  });
+
+
+app.use(sessionMiddleware);
 
 app.use(passport.initialize())
 app.use(session({
@@ -85,7 +104,7 @@ const url = process.env.DB_URL
 new MongoClient(url).connect().then((client)=>{
   console.log('DB연결성공')
   db = client.db('forum');
-  app.listen(process.env.PORT, () => {
+  server.listen(process.env.PORT, () => {
         console.log('http://localhost:8080 에서 실행 중')
     })
 }).catch((err)=>{
@@ -307,10 +326,29 @@ app.put('/edit', async (요청, 응답) => {
 
 
 app.delete('/delete', async(요청, 응답)=>{
+    console.log(JSON.stringify(요청.user._id))
+    if(JSON.stringify(요청.user._id) == JSON.stringify("65e72404f37ac02a9e1588d6")){
+        
+        await db.collection('post').deleteOne({
+            _id : new ObjectId(요청.query.docid), // 게시글 아이디 확인
+        })
+        응답.send('삭제완료')
+    }
+    else{
+        await db.collection('post').deleteOne({
+            _id : new ObjectId(요청.query.docid), // 게시글 아이디 확인
+            user : new ObjectId(요청.user._id) // 본인이 쓴글인지 확인
+            })
+        응답.send('삭제완료')
+    }
+    
+    
+})
 
-    await db.collection('post').deleteOne({
+app.delete('/chat/delete', async(요청, 응답)=>{
+
+    await db.collection('chatroom').deleteOne({
         _id : new ObjectId(요청.query.docid), // 게시글 아이디 확인
-        user : new ObjectId(요청.user._id) // 본인이 쓴글인지 확인
         })
     응답.send('삭제완료')
     
@@ -405,11 +443,13 @@ app.get('/list', async(요청, 응답)=>{
     else{
         let userid = 요청.user._id
         let result = await db.collection('post').find().toArray()// 컬렉션의 모든 document 출력 하는 법.
-        응답.render('list.ejs', { posts : result , userid : userid })
-
-        // 서버 데이터를 ejs 파일에 넣으려면
-        // 1. ejs 파일로 데이터 전송
-        // 2. ejs 파일 안에서 <%=데이터이름%>
+        console.log(result)
+        if(result == ''){
+            응답.render('write.ejs')
+        }
+        else{
+            응답.render('list.ejs', { posts : result , userid : userid })
+        }
     }
     
 })
@@ -471,14 +511,7 @@ app.post('/comment', async (요청, 응답) => {
 app.get('/chat-detail', async(요청, 응답)=>{
     응답.render('chat-detail.ejs')
 })
-// app.get('/chat-detail/:id', async(요청, 응답)=>{
-    
-//     await db.collection('chatroom').findOne({
-//         writer :요청.params.id
-//     })
-    
-//     응답.render('chat-detail.ejs')
-// })
+
 
 app.get('/make-chat', async(요청, 응답)=>{
     console.log(요청.user)
@@ -490,17 +523,108 @@ app.get('/make-chat', async(요청, 응답)=>{
     응답.redirect('/mychat')
 })
 app.get('/mychat', async(요청, 응답)=>{
-    let result = await db.collection('chatroom').find({
-        member : 요청.user._id
-    }).toArray()
-    응답.render('mychat.ejs', { result : result })
+    if(요청.user == undefined){
+        응답.render('login.ejs')
+    }
+    else{
+        let result = await db.collection('chatroom').find({
+            member : 요청.user._id
+        }).toArray()
+        응답.render('mychat.ejs', { result : result })
+    }
+    
 })
 
 app.get('/mychat/:id', async(요청, 응답)=>{
-    let result = await db.collection('chatroom').find({
-        member : 요청.user._id
-    }).toArray()
-    응답.render('chat-detail.ejs', { result : result })
+    if(요청.user == undefined){
+        응답.render('login.ejs')
+    }
+    else{
+        let result = await db.collection('chatroom').findOne({
+            _id : new ObjectId(요청.params.id)
+        })
+        let user = new ObjectId(요청.user._id)
+        let myname_id = ''
+        let opponent_id = ''
+        let myname = ''
+        let opponent = ''
+        if(JSON.stringify(요청.user._id) == JSON.stringify(result.member[0])){
+            myname_id = result.member[0]
+            opponent_id = result.member[1]
+            myname = await db.collection('user').findOne({
+                _id : myname_id
+            })
+            opponent = await db.collection('user').findOne({
+                _id : opponent_id
+            })
+            myname = myname.username
+            opponent = opponent.username
+        }
+        else{
+            myname_id = result.member[1]
+            opponent_id = result.member[0]
+            myname = await db.collection('user').findOne({
+                _id : myname_id
+            })
+            opponent = await db.collection('user').findOne({
+                _id : opponent_id
+            })
+            myname = myname.username
+            opponent = opponent.username
+        }
+        try{
+            if(JSON.stringify(요청.user._id) == JSON.stringify(result.member[0]) || JSON.stringify(요청.user._id) == JSON.stringify(result.member[1])){
+    
+                let chatcontent = await db.collection('chatcontent').find({
+                    parent_id : new ObjectId(요청.params.id),
+                }).toArray()
+                응답.render('chat-detail.ejs', { result : result , chatcontent: chatcontent , user : user, myname: myname, opponent:opponent}) 
+            }
+            else{
+                응답.redirect('/login')
+            }
+        }
+        catch(e){
+            console.log(e)
+            응답.status(404).send('채팅방이 사라졌습니다.')
+        }
+    }
+})
+io.engine.use(sessionMiddleware)
+
+// 웹소켓 연결되면 실행되는 코드
+io.on('connection', (socket)=>{
+
+    // 보낸 데이터를 받으려면 socket.on() 사용.
+    socket.on('age', (data)=>{
+        console.log('유저가보낸거', data)
+    })
+
+    // [서버 -> 모든유저] 데이터 전송
+    io.emit('name', 'paul') 
+    
+    // socket.join('1') // 유저를 room으로 보냄.(모든사람에게 데이터를 주는게 아니라, 룸에 있는 사람에게만 데이터를 전송하기 위해서 룸으로 보내면 좋음)
+
+    // 룸 join 요청이 왔을 때 조인시키는 명령어.
+    socket.on('ask-join', (data)=>{
+        // console.log(socket.request.session) // 현재 로그인된 유저가 뜸.
+        socket.join(data)
+    })
+
+    // 특정 룸에만 데이터를 전송하는 방법
+    socket.on('message', (data)=>{
+        
+        // DB에 채팅 내용 저장하기(채팅내용, 날짜, 부모_id, 작성자)
+        db.collection('chatcontent').insertOne({
+            content : data.msg,
+            date : new Date(),
+            parent_id : new ObjectId(data.room) ,
+            writer : new ObjectId(socket.request.session.passport.user.id)
+        })
+
+        // 특정 룸에 데이터 뿌리기
+        io.to(data.room).emit('broadcast', data.msg)
+    })
 })
 
 

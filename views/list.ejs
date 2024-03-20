@@ -13,6 +13,7 @@
 <body class="grey-bg">
     <!-- 재사용이 많은 ui 같은 경우 따로 ejs파일로 만들고 밑에 방식으로 간단하게 추가함. -->
     <%- include('nav_login.ejs') %>
+    <!-- <%= JSON.stringify(userid) %> -->
     <!-- <%= JSON.stringify(posts) %> -->
     <div class="white-bg">
       <div class="write-btn">
@@ -45,7 +46,23 @@
               <button type="submit" class="like-btn">좋아요</button>
             </form> 
           </div>
-        <% } else{%>
+        <% }else if(JSON.stringify(userid) == JSON.stringify("65e72404f37ac02a9e1588d6")){ %>
+          <div class="list-box">
+            <h4>
+              <a class="list-title" href="/detail/<%= posts[i]._id %>">
+                <%= posts[i].title %>
+              </a>
+              <a href="/edit/<%= posts[i]._id %>">✏️</a>
+              <span class="delete" data-id="<%= posts[i]._id %>">🗑️</span>
+            </h4>
+            <p><%= posts[i].content %></p>
+            <img src="<%= posts[i].img %>">
+            <form class="like" action="/like" method="POST">
+              <input name= "id" value="<%= posts[i]._id %>" style="display: none;">
+              <button type="submit" class="like-btn">좋아요</button>
+            </form> 
+          </div>
+        <% } else{ %>
           <div class="list-box">
             <h4>
               <a class="list-title" href="/detail/<%= posts[i]._id %>">

@@ -138,6 +138,12 @@ input,div {
 
 .chat-screen { width: 100%; }
 .chat-box { margin-top: 15px; display: flex; }
+.name{
+  font-weight: bold;
+  margin-top: 15px; display: flex;
+  padding: 10px;
+}
+
 .chat-box span { padding: 10px; background: #eee; }
 .mine { justify-content: end; }
 .chat-input {
