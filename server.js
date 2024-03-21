@@ -116,7 +116,6 @@ app.use('/login', null_check)
 app.use('/register', null_check)
 
 function null_check(요청, 응답, next){
-    console.log(요청.body)
     if(!요청.body.usersname ){
         console.log('빈칸으로 제출하지마시오.')
 
@@ -309,7 +308,6 @@ app.put('/edit', async (요청, 응답) => {
         {$set : { title : 요청.body.title, content : 요청.body.content}
         })
         응답.redirect('/list')
-        console.log(result.matchedCount)
     }catch(e){
         console.log(e)
         응답.status(404).send('이상한 url 입력함.') 
@@ -355,7 +353,7 @@ app.delete('/chat/delete', async(요청, 응답)=>{
 })
 
 app.get('/list/:id', async(요청, 응답)=>{
-    // 1번 ~ 5번글을 찾아서 result변수에 저장.
+    // 1번 ~ 5번글을 찾아서 result변수에 저장F.
     let userid = 요청.user._id
     let result = await db.collection('post').find().skip((요청.params.id-1)*5).limit(5).toArray()// 컬렉션의 모든 document 출력 하는 법.
     응답.render('list.ejs', { posts : result , userid : userid})
@@ -398,8 +396,11 @@ app.get('/mypage', async(요청,응답)=>{
         응답.render('login.ejs')
     }
     else{
-        let result = await 요청.user.username
-        응답.render('mypage.ejs', {posts : result})
+        let result = await db.collection('post').find({
+            user : new ObjectId(요청.user._id)
+        }).toArray()// 
+        let username = await 요청.user.username
+        응답.render('mypage.ejs', {posts:result, username : username})
     }
     
 
@@ -443,7 +444,6 @@ app.get('/list', async(요청, 응답)=>{
     else{
         let userid = 요청.user._id
         let result = await db.collection('post').find().toArray()// 컬렉션의 모든 document 출력 하는 법.
-        console.log(result)
         if(result == ''){
             응답.render('write.ejs')
         }
@@ -514,7 +514,6 @@ app.get('/chat-detail', async(요청, 응답)=>{
 
 
 app.get('/make-chat', async(요청, 응답)=>{
-    console.log(요청.user)
     await db.collection('chatroom').insertOne({
         // member 안에 방문자_id와 작성자의_id 를 각각 저장
         member : [요청.user._id, new ObjectId(요청.query.writerId)],
@@ -596,9 +595,9 @@ io.engine.use(sessionMiddleware)
 io.on('connection', (socket)=>{
 
     // 보낸 데이터를 받으려면 socket.on() 사용.
-    socket.on('age', (data)=>{
-        console.log('유저가보낸거', data)
-    })
+    // socket.on('age', (data)=>{
+    //     console.log('유저가보낸거', data)
+    // })
 
     // [서버 -> 모든유저] 데이터 전송
     io.emit('name', 'paul') 
@@ -627,4 +626,13 @@ io.on('connection', (socket)=>{
     })
 })
 
-
+// app.get("/logout", (요청, 응답) => {
+//     const sessionId = 요청.user._id
+  
+//     요청.session.destroy(() => {
+//       // disconnect all Socket.IO connections linked to this session ID
+//       io.in(sessionId).disconnectSockets();
+//       응답.status(204).end();
+//       응답.render('login.ejs')
+//     });
+//   });

@@ -13,17 +13,17 @@
 <body class="grey-bg">
     <%- include('nav_login.ejs') %>
 
-    <%= JSON.stringify(result) %>
+    <!-- <%= JSON.stringify(result) %> -->
     <!-- <%= JSON.stringify(chatcontent[0]) %> -->
     <div class="detail-bg">
         <div class="chat-screen">
           <% for(let i =0; i< chatcontent.length; i++){ %>
             <% if(JSON.stringify(chatcontent[i].writer) == JSON.stringify(user) ){ %>
-              <div class="name mine"><span><%= myname %></span></div>
+              <div class="chat-name mine"><span><%= myname %></span></div>
               <div class="chat-box mine" ><span><%= chatcontent[i].content %></span></div>
               <div class="chat-box mine date"><%= chatcontent[i].date %></div>
             <% } else{ %>
-              <div class="name"><span><%= opponent %></span></div>
+              <div class="chat-name"><span><%= opponent %></span></div>
               <div class="chat-box"><span><%= chatcontent[i].content %></span></div>
               <div class="chat-box date" ><%=chatcontent[i].date %></div>
             <% } %>
@@ -32,7 +32,7 @@
         </div>
       </div>
       <div class="chat-form">
-        <input class="chat-input" onkeyup="enterkey()">
+        <input class="chat-input" onkeyup="enterkey()" style="width: 500px;">
         <button class="chat-button">전송</button>
       </div> 
     
@@ -61,6 +61,8 @@
         if(window.event.keyCode==13){
           let msg = document.querySelector('.chat-input').value
           socket.emit('message', { msg : msg , room : '<%= result._id %>'})
+          location.reload();
+          // window.scrollTo(0,99999)
         }
       }
 
@@ -83,6 +85,7 @@
         // .chat-screen 찾아서 그거 끝나기 전에다가 html 추가하는 코드인듯. ` `(backtick) 표시 안에 넣으면 문자 중간에 변수값도 넣을 수 있음 그래서 ${data} 요런식으로 사용 가능
         document.querySelector('.chat-screen').insertAdjacentHTML('beforeend', `<div class="chat-box mine"><span>${data}</span></div>`)
         location.reload();
+        
 
       })
 
