@@ -162,7 +162,7 @@ function null_check(요청, 응답, next){
 // 이 밑에 있는 코드를 실행하고 싶으면 passport.authenticate('local')() 쓰면 됨.
 
 passport.use(new LocalStrategy(async (입력한아이디, 입력한비번, cb) => {
-    let result = await db.collection('user').findOne({ username : 입력한아이디})
+    let result = await db.collection('user').findOne({ userid : 입력한아이디})
     if (!result) {
       return cb(null, false, { message: '아이디 DB에 없음' })
     }
@@ -212,7 +212,7 @@ app.get('/', async(요청, 응답)=>{
 // __dirname -> 현재 프로젝트 절대 경로 의미.(server.js가 담긴 폴더)
 app.get('/home', async(요청,응답)=>{
     let result = await db.collection('post').find().limit(3).toArray()
-    if(요청.user == undefined){
+    if(요청.user == undefined || 요청.user.authority == "0"){
         응답.sendFile(__dirname+'/index.html')
     }   
     else{
@@ -275,16 +275,22 @@ app.post('/add', upload.single('img1'), async (요청, 응답) => {
 
 app.get('/detail/:id', async (요청, 응답) => {
     try{
-        let comment = await db.collection('comment').find({
-            parentId : new ObjectId(요청.params.id)
-        }).toArray()
-        let result = await db.collection('post').findOne({ 
-            _id : new ObjectId(요청.params.id) 
-        })
-        응답.render('detail.ejs', { result : result , comment : comment})
-        if(result == null){
-            응답.status(404).send('이상한 url 입력함.') 
+        if(요청.user == undefined || 요청.user.authority == "0"){
+            응답.render('login.ejs')
         }
+        else{
+            let comment = await db.collection('comment').find({
+                parentId : new ObjectId(요청.params.id)
+            }).toArray()
+            let result = await db.collection('post').findOne({ 
+                _id : new ObjectId(요청.params.id) 
+            })
+            응답.render('detail.ejs', { result : result , comment : comment})
+            if(result == null){
+                응답.status(404).send('이상한 url 입력함.') 
+            }
+        }
+        
     } catch(e){
         console.log(e)
         응답.status(404).send('이상한 url 입력함.') 
@@ -366,6 +372,13 @@ app.get('/list/next/:id', async(요청, 응답)=>{
     응답.render('list.ejs', { posts : result , userid : userid})
 })
 
+
+app.get('/login', async(요청,응답)=>{
+
+    응답.render('login.ejs')
+
+})
+
 app.post('/login', async(요청,응답, next)=>{
     let result = await db.collection('post').find().limit(3).toArray()
     passport.authenticate('local', (error, user, info)=>{
@@ -386,13 +399,8 @@ app.post('/login', async(요청,응답, next)=>{
 })
 
 
-app.get('/login', async(요청,응답)=>{
-
-    응답.render('login.ejs')
-
-})
 app.get('/mypage', async(요청,응답)=>{
-    if(요청.user == undefined){
+    if(요청.user == undefined || 요청.user.authority == "0"){
         응답.render('login.ejs')
     }
     else{
@@ -415,18 +423,21 @@ app.post('/register' , async(요청, 응답)=>{
 
     let 해시 = await bcrypt.hash(요청.body.password, 10)
     // 기존의 비밀번호를 해싱을 해서 암호화 하는 작업.
-    let result = await db.collection('user').findOne({ username : 요청.body.username })  
+    let result = await db.collection('user').findOne({ userid : 요청.body.userid })  
 
-    if(요청.body.username == ''){
-        console.log("아이디가 입력되지 않았습니다.")
+    if(요청.body.userid == '' || 요청.body.username == '' || 요청.body.nickname == ''){
+        console.log("입력되지 않은 칸이 있습니다. 다시 확인해주세요.")
     }
     else if(요청.body.password != 요청.body.password_check){
         console.log('비밀번호가 일치하지 않습니다. 다시 확인해주세요.')
     }
     else if(!result){
         await db.collection('user').insertOne({ 
+            
             username : 요청.body.username,
-            password : 해시 //해싱한 값을 비번에 저장.
+            userid : 요청.body.userid,
+            password : 해시, //해싱한 값을 비번에 저장.   
+            authority : "0"
         })
         응답.redirect('/')
     }
@@ -438,7 +449,7 @@ app.post('/register' , async(요청, 응답)=>{
 
 
 app.get('/list', async(요청, 응답)=>{
-    if(요청.user == undefined){
+    if(요청.user == undefined || 요청.user.authority == "0"){
         응답.render('login.ejs')
     }
     else{
@@ -522,7 +533,7 @@ app.get('/make-chat', async(요청, 응답)=>{
     응답.redirect('/mychat')
 })
 app.get('/mychat', async(요청, 응답)=>{
-    if(요청.user == undefined){
+    if(요청.user == undefined || 요청.user.authority == "0"){
         응답.render('login.ejs')
     }
     else{
@@ -535,7 +546,7 @@ app.get('/mychat', async(요청, 응답)=>{
 })
 
 app.get('/mychat/:id', async(요청, 응답)=>{
-    if(요청.user == undefined){
+    if(요청.user == undefined || 요청.user.authority == "0"){
         응답.render('login.ejs')
     }
     else{

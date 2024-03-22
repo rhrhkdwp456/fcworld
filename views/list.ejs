@@ -33,6 +33,7 @@
         <% if(JSON.stringify(userid) == JSON.stringify(posts[i].user)){ %>
           <div class="list-box">
             <h4>
+              <h5><%= posts[i].username %></h5>
               <a class="list-title" href="/detail/<%= posts[i]._id %>">
                 <%= posts[i].title %>
               </a>
@@ -46,9 +47,10 @@
               <button type="submit" class="like-btn">좋아요</button>
             </form> 
           </div>
-        <% }else if(JSON.stringify(userid) == JSON.stringify("65e72404f37ac02a9e1588d6")){ %>
+        <% }else if(JSON.stringify(userid) == JSON.stringify("65fd412ac56f245c840d41c3")){ %>
           <div class="list-box">
             <h4>
+              <h5><%= posts[i].username %></h5>
               <a class="list-title" href="/detail/<%= posts[i]._id %>">
                 <%= posts[i].title %>
               </a>
@@ -65,6 +67,7 @@
         <% } else{ %>
           <div class="list-box">
             <h4>
+              <h5><%= posts[i].username %></h5>
               <a class="list-title" href="/detail/<%= posts[i]._id %>">
                 <%= posts[i].title %>
               </a>

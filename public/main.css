@@ -37,16 +37,38 @@ body {
   padding : 10px;
   border-bottom: 1px solid#eee;
 }
-.list-box a {
+.list-box a{
   text-decoration: none;
 }
-.list-title {
+.list-title{
   color: black;
   font-weight:bold;
+  text-decoration: none;
+
+}
+.list-box p{
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.list-title a{
+  max-width: 200px;
+  color: black;
+  font-weight:bold;
+  text-decoration: none;
+}
+.list-edit a{
+  text-decoration: none;
 }
 .list-box h4{
   font-size: 16px;
   margin: 5px;
+}
+.list-box h5{
+  font-weight: bold;
+  color:skyblue;
 }
 .list-box p {
   font-size: 13px;
@@ -167,8 +189,14 @@ input,div {
   display: flex;
   flex: 1;
 }
-.mypage-list{
-  text-overflow: ellipsis;
-  overflow: hidden;
+.mypage-list-title p{
+  font-weight: bold;
+  font-size: 20px;
+  max-width: 200px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mypage-list-title a{
+  color: black;
 }
