@@ -41,7 +41,7 @@
               <span class="delete" data-id="<%= posts[i]._id %>">🗑️</span>
             </h4>
             <p><%= posts[i].content %></p>
-            <img src="<%= posts[i].img %>">
+            <a href="/detail/<%= posts[i]._id %>" style="text-decoration: none;"><img src="<%= posts[i].img %>" style="object-fit:fill;"></a>
             <form class="like" action="/like" method="POST">
               <input name= "id" value="<%= posts[i]._id %>" style="display: none;">
               <button type="submit" class="like-btn">좋아요</button>
@@ -58,7 +58,7 @@
               <span class="delete" data-id="<%= posts[i]._id %>">🗑️</span>
             </h4>
             <p><%= posts[i].content %></p>
-            <img src="<%= posts[i].img %>">
+            <a href="/detail/<%= posts[i]._id %>" style="text-decoration: none;"><img src="<%= posts[i].img %>" style="object-fit:fill;"></a>
             <form class="like" action="/like" method="POST">
               <input name= "id" value="<%= posts[i]._id %>" style="display: none;">
               <button type="submit" class="like-btn">좋아요</button>
@@ -73,7 +73,7 @@
               </a>
             </h4>
             <p><%= posts[i].content %></p>
-            <img src="<%= posts[i].img %>">
+            <a href="/detail/<%= posts[i]._id %>" style="text-decoration: none;"><img src="<%= posts[i].img %>" style="object-fit:fill;"></a>
             <form class="like" action="/like" method="POST">
               <input name= "id" value="<%= posts[i]._id %>" style="display: none;">
               <button type="submit" class="like-btn">좋아요</button>
@@ -97,6 +97,7 @@
           .then((r)=> {
             console.log("delete sucess")
             e.target.parentElement.parentElement.style.display ="none" 
+            location.reload();
         })
       }
     )}

@@ -222,7 +222,7 @@ app.get('/home', async(요청,응답)=>{
 
 
 app.get('/rank', (요청, 응답) =>{
-    if(요청.user == undefined){
+    if(요청.user == undefined || 요청.user.authority == "normal"){
         응답.render('login.ejs')
     }
     else{
@@ -275,7 +275,7 @@ app.post('/add', upload.single('img1'), async (요청, 응답) => {
 
 app.get('/detail/:id', async (요청, 응답) => {
     try{
-        if(요청.user == undefined || 요청.user.authority == "0"){
+        if(요청.user == undefined || 요청.user.authority == "normal"){
             응답.render('login.ejs')
         }
         else{
@@ -330,9 +330,7 @@ app.put('/edit', async (요청, 응답) => {
 
 
 app.delete('/delete', async(요청, 응답)=>{
-    console.log(JSON.stringify(요청.user._id))
-    if(JSON.stringify(요청.user._id) == JSON.stringify("65e72404f37ac02a9e1588d6")){
-        
+    if(요청.user.authority == "MANAGER"){
         await db.collection('post').deleteOne({
             _id : new ObjectId(요청.query.docid), // 게시글 아이디 확인
         })
@@ -347,6 +345,33 @@ app.delete('/delete', async(요청, 응답)=>{
     }
     
     
+})
+
+app.delete('/user-delete', async(요청, 응답)=>{
+    if(요청.user.authority == "MANAGER"){
+        await db.collection('user').deleteOne({
+            _id : new ObjectId(요청.query.docid), // 게시글 아이디 확인
+        })
+        응답.send('삭제완료')
+    }
+    else{
+        await db.collection('user').deleteOne({
+            _id : new ObjectId(요청.query.docid), // 게시글 아이디 확인
+            user : new ObjectId(요청.user._id) // 본인이 쓴글인지 확인
+            })
+        응답.send('삭제완료')
+    }
+    
+    
+})
+
+app.get('/authority', async(요청,응답)=>{
+        let result = await db.collection('user').updateOne({
+            _id : new ObjectId(요청.query.docid),
+        },
+        {$set : { authority : "FC"}
+        })
+        응답.redirect('back')
 })
 
 app.delete('/chat/delete', async(요청, 응답)=>{
@@ -400,15 +425,15 @@ app.post('/login', async(요청,응답, next)=>{
 
 
 app.get('/mypage', async(요청,응답)=>{
-    if(요청.user == undefined || 요청.user.authority == "0"){
+    if(요청.user == undefined || 요청.user.authority == "normal"){
         응답.render('login.ejs')
     }
     else{
+        let user = await 요청.user
         let result = await db.collection('post').find({
             user : new ObjectId(요청.user._id)
         }).toArray()// 
-        let username = await 요청.user.username
-        응답.render('mypage.ejs', {posts:result, username : username})
+        응답.render('mypage.ejs', {posts:result, user : user})
     }
     
 
@@ -437,7 +462,7 @@ app.post('/register' , async(요청, 응답)=>{
             username : 요청.body.username,
             userid : 요청.body.userid,
             password : 해시, //해싱한 값을 비번에 저장.   
-            authority : "0"
+            authority : "normal"
         })
         응답.redirect('/')
     }
@@ -449,7 +474,7 @@ app.post('/register' , async(요청, 응답)=>{
 
 
 app.get('/list', async(요청, 응답)=>{
-    if(요청.user == undefined || 요청.user.authority == "0"){
+    if(요청.user == undefined || 요청.user.authority == "normal"){
         응답.render('login.ejs')
     }
     else{
@@ -523,6 +548,18 @@ app.get('/chat-detail', async(요청, 응답)=>{
     응답.render('chat-detail.ejs')
 })
 
+app.get('/manager', async(요청, 응답)=>{
+    if(요청.user == undefined || 요청.user.authority == "normal" || 요청.user.authority == "FC" ){
+        응답.render('login.ejs')
+    }
+    else{
+        let result = await db.collection('user').find().toArray()
+        응답.render('manager.ejs' , {posts : result})
+    }
+    
+})
+
+
 
 app.get('/make-chat', async(요청, 응답)=>{
     await db.collection('chatroom').insertOne({
@@ -532,21 +569,39 @@ app.get('/make-chat', async(요청, 응답)=>{
     })
     응답.redirect('/mychat')
 })
+
+
 app.get('/mychat', async(요청, 응답)=>{
-    if(요청.user == undefined || 요청.user.authority == "0"){
+    if(요청.user == undefined || 요청.user.authority == "normal"){
         응답.render('login.ejs')
     }
     else{
         let result = await db.collection('chatroom').find({
-            member : 요청.user._id
+            member : new ObjectId(요청.user._id)
         }).toArray()
-        응답.render('mychat.ejs', { result : result })
+        let opponent_id = []
+        for(let i =0;i<result.length;i++){
+            if(JSON.stringify(result[i].member[0]) == JSON.stringify(요청.user._id)){
+                opponent_id[i] = result[i].member[1]
+            }
+            else{
+                opponent_id[i] =  result[i].member[0]
+            }
+        }
+        let opponent = []
+        for(let i =0;i<opponent_id.length;i++){
+            opponent[i] =  await db.collection('user').findOne({
+                _id : new ObjectId(opponent_id[i])
+            })
+        }
+        응답.render('mychat.ejs', { result : result , opponent: opponent })
     }
     
 })
 
+
 app.get('/mychat/:id', async(요청, 응답)=>{
-    if(요청.user == undefined || 요청.user.authority == "0"){
+    if(요청.user == undefined || 요청.user.authority == "normal"){
         응답.render('login.ejs')
     }
     else{

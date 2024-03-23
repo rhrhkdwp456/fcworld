@@ -17,7 +17,7 @@
       <% for(let i =0; i< result.length ;i++){ %>
           <div class="list-box">
             <h4>
-              <a href="/mychat/<%= result[i]._id %>">채팅방 <%= i+1 %></a>
+              <a href="/mychat/<%= result[i]._id %>"><%= opponent[i].username %> </a>
               <span class="delete" data-id="<%= result[i]._id %>">🗑️</span>
             </h4>
             <p>채팅방 설명~~</p>

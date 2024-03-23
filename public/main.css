@@ -68,7 +68,7 @@ body {
 }
 .list-box h5{
   font-weight: bold;
-  color:skyblue;
+  color: #2978B5;
 }
 .list-box p {
   font-size: 13px;
@@ -127,8 +127,8 @@ input,div {
   margin-top: 10px;
 }
 .detail-bg img{
-  width: 300px;
-  height: 300px;
+  width: 500px;
+  height: 500px;
 }
 .write-btn{
   text-align: right;
@@ -186,7 +186,9 @@ input,div {
   text-align: right;
 }
 .mypage-box{
+  width: 100vw;
   display: flex;
+  Flex-wrap: nowrap;
   flex: 1;
 }
 .mypage-list-title p{
@@ -199,4 +201,16 @@ input,div {
 }
 .mypage-list-title a{
   color: black;
+}
+.manager-list{
+  display: flex;
+}
+.manager-list button{
+  padding: 10px;
+  border : none;
+  background : lightgrey;
+  border-radius: 5px;
+}
+.user-delete{
+  margin-right: 20px;
 }
