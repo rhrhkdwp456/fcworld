@@ -13,24 +13,48 @@
 <body class="grey-bg">
     <%- include('nav_login.ejs') %>
     <div class="detail-bg">
-        <div style="margin-bottom: 30px;">
-            <h4 style="font-weight: bold;"><%= result.title %></h4>
-            <p style="font-weight:800"><%= result.content %></p>
-            <a href="/make-chat?writerId=<%= result.user %>" style="text-decoration: none; color: #2978B5; font-weight: bold; font-size: 20px;">채팅하기</a><br>
+        <div class="detail-box">
+            <% if(JSON.stringify(result.user)  == JSON.stringify(user._id)){ %>
+                <div style="margin-bottom: 30px;">
+                    <h4 style="font-weight: bold;"><%= result.title %></h4>
+                    <p style="font-weight:800"><%= result.content %></p>
+                </div>
+                <img src="<%= result.img %>">
+                <hr style="margin-top: 60px">
+                <h5 style="font-weight: bold;">댓글 <%= comment.length %>개</h5>
+                <% for(let i =0; i< comment.length;i++){ %>
+                    <div>   
+                        <p><strong><%= comment[i].writer %></strong> <%= comment[i].comment %></p>
+                    </div>
+                <% } %>
+                <form action="/comment" method="POST">
+                <input name="content" style="width: 300px;">
+                <input name="parentId" value="<%= result._id %>" style="display: none">
+                <button type="submit">댓글작성</button>
+                </form>
+            <% } else{ %>
+                <div style="margin-bottom: 30px;">
+                    <h4 style="font-weight: bold;"><%= result.title %></h4>
+                    <p style="font-weight:800"><%= result.content %></p>
+                    <a href="/make-chat?writerId=<%= result.user %>" style="text-decoration: none; color: #2978B5; font-weight: bold; font-size: 20px;">채팅하기</a><br>
+                </div>
+                <img src="<%= result.img %>" style="width: 100%; height: 100%;">
+                <hr style="margin-top: 60px">
+                <h5 style="font-weight: bold;">댓글 <%= comment.length %>개</h5>
+                <% for(let i =0; i< comment.length;i++){ %>
+                    <div>   
+                        <p><strong><%= comment[i].writer %></strong> <%= comment[i].comment %></p>
+                    </div>
+                <% } %>
+                <form action="/comment" method="POST">
+                <input name="content" style="width: 300px;">
+                <input name="parentId" value="<%= result._id %>" style="display: none">
+                <button type="submit">댓글작성</button>
+                </form>
+            <% } %>
         </div>
-        <img src="<%= result.img %>" style="object-fit:fill;">
-        <hr style="margin-top: 60px">
-        <h5 style="font-weight: bold;">댓글 <%= comment.length %>개</h5>
-        <% for(let i =0; i< comment.length;i++){ %>
-            <div>   
-                <p><strong><%= comment[i].writer %></strong> <%= comment[i].comment %></p>
-            </div>
-        <% } %>
-        <form action="/comment" method="POST">
-        <input name="content" style="width: 300px;">
-        <input name="parentId" value="<%= result._id %>" style="display: none">
-        <button type="submit">댓글작성</button>
-        </form>
+        
+        
     </div>  
 
 

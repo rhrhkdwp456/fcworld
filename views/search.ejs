@@ -16,11 +16,10 @@
     <!-- <%= JSON.stringify(posts) %> -->
     <div class="white-bg">
       <div class="write-btn">
-        <button type="button" class="btn btn-primary"><a href="/write">글작성</a></button>
-      </div>
-      
         <input class="search">
         <button class="search-send">검색</button>
+        <button type="button" class="btn btn-primary"><a href="/write">글작성</a></button>
+      </div>
       <script>
         document.querySelector('.search-send').addEventListener('click', function(){
 
@@ -28,7 +27,8 @@
           location.href = '/search?val=' + 입력한검색어
         })
       </script>
-    <h4>검색 결과</h4>
+    <br>
+    <h4 style="margin-left: 10px; font-weight: bold;">검색 결과</h4>
       
       <% for(let i =0; i< posts.length ;i++){ %>
         <div class="list-box">

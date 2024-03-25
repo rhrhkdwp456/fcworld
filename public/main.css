@@ -29,13 +29,22 @@ body {
   background: #eee;
 }
 .white-bg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   background: white;
   margin: 20px;
   border-radius: 5px;
 }
 .list-box {
+  max-width: 600px;
+  
   padding : 10px;
   border-bottom: 1px solid#eee;
+}
+.list-box img{
+  width: 100%;
+
 }
 .list-box a{
   text-decoration: none;
@@ -47,6 +56,9 @@ body {
 
 }
 .list-box p{
+  font-size: 13px;
+  margin: 5px;
+  color: grey;
   max-width: 200px;
   white-space: nowrap;
   overflow: hidden;
@@ -69,16 +81,7 @@ body {
 .list-box h5{
   font-weight: bold;
   color: #2978B5;
-}
-.list-box p {
-  font-size: 13px;
-  margin: 5px;
-  color: grey;
-}
-
-.list-box img{
-  width: 200px;
-  height: 200px;
+  font-size: 15px;
 }
 input,div {
   box-sizing: border-box;
@@ -105,6 +108,7 @@ input,div {
 }
 .content{
   margin-top: 30px;
+  margin-bottom: 100px;
   background-color: #F1F3F580;
   text-align: center;
 }
@@ -113,25 +117,26 @@ input,div {
 }
 .content-box{
   flex: 1;
-  width: 400px;
   margin-top: 10px;
   padding: 20px;
+  height: auto;
 }
 .content-box img{
-  width: 70%;
-  height: 70%;
+  width: 100%;
+  height: 100%;
 }
 .detail-bg {
   background: white;
   padding: 15px;
   margin-top: 10px;
 }
-.detail-bg img{
-  width: 500px;
-  height: 500px;
+.detail-box{
+  max-width: 600px;
+}
+.detail-box img{
+  width: 100%;
 }
 .write-btn{
-  text-align: right;
   margin-right: 30px;
   padding-top: 20px;
 }
@@ -186,7 +191,7 @@ input,div {
   text-align: right;
 }
 .mypage-box{
-  width: 100vw;
+  width: auto;
   display: flex;
   Flex-wrap: nowrap;
   flex: 1;
@@ -213,4 +218,61 @@ input,div {
 }
 .user-delete{
   margin-right: 20px;
+}
+
+
+ul.list {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid #ccc;
+}
+ul.list::after {
+  content: '';
+  display: block;
+  clear: both;
+}
+.tab-button {
+  display: block;
+  padding: 10px 20px 10px 20px;
+  float: left;
+  margin-right: -1px;
+  margin-bottom: -1px;
+  color: grey;
+  text-decoration: none;
+  cursor: pointer;
+}
+.orange {
+  border-top: 2px solid orange;
+  border-right: 1px solid #ccc;
+  border-bottom: 1px solid white;
+  border-left: 1px solid #ccc;
+  color: black;
+  margin-top: -2px;
+}
+.tab-content {
+  display: none;
+  padding: 10px;
+}
+.show {
+  display: block;
+}
+.form-hide {
+  display: none;
+}
+.like-btn{
+  font-weight: 600;
+  padding: 1px;
+  border : none;
+  background : #2978B5;
+  border-radius: 5px;
+}
+.like-box{
+  margin-top: 10px;
+  display: flex;
+  margin-bottom: 5px;
+}
+.like-box span{
+  font-size: 14px;
+  margin-right: 10px;
 }

@@ -50,7 +50,7 @@ app.use(session({
   cookie : { maxAge : 60 * 60 * 1000 } ,// 세션 document 유효기간 변경 하는 코드(60*1000 -> 60초, 60*60*1000 -> 1시간)
   store : MongoStore.create({
     mongoUrl : process.env.DB_URL,
-    dbName : 'forum'
+    dbName : 'forum',
   })
 }))
 
@@ -190,7 +190,7 @@ passport.deserializeUser(async (user, done) =>{
     let result = await db.collection('user').findOne({_id: new ObjectId(user.id)})
     delete result.password // 비번은 삭제
     process.nextTick(() => { // 내부 코드를 비동기적으로 처리해줌
-        done(null, result) // result에 저장된 값이 요청.user에 들어감.
+        return done(null, result) // result에 저장된 값이 요청.user에 들어감.
     })
 })
 
@@ -235,13 +235,27 @@ app.get('/rank', (요청, 응답) =>{
 // 자바스크립트는 처리가 오래 걸리는 코드는 처리완료 기다리지 않고 다음줄 실행함. 그래서 await 써줘야됨.
 app.post('/like', async(요청, 응답)=> {
     // 만일 post_id = 현재 글 id and user = 현재유저_id
-    await db.collection('history').insertOne(
-    {
+    let history = await db.collection('history').findOne({
         post_id : new ObjectId(요청.body.id),
         user : 요청.user._id
     })
+    if(history != null){
+        await db.collection('history').deleteOne(
+            {
+                post_id : new ObjectId(요청.body.id),
+                user : 요청.user._id
+            })
+        await db.collection('post').updateOne({ _id : new ObjectId(요청.body.id) }, {$inc : {like : -1}})
+    }
+    else{
+        await db.collection('history').insertOne(
+            {
+                post_id : new ObjectId(요청.body.id),
+                user : 요청.user._id
+            })
+        await db.collection('post').updateOne({ _id : new ObjectId(요청.body.id) }, {$inc : {like : 1}})
+    }
     응답.redirect('back')
-    await db.collection('post').updateOne({ _id : new ObjectId(요청.body.id) }, {$inc : {like : 1}})
 })
 
 
@@ -285,7 +299,8 @@ app.get('/detail/:id', async (요청, 응답) => {
             let result = await db.collection('post').findOne({ 
                 _id : new ObjectId(요청.params.id) 
             })
-            응답.render('detail.ejs', { result : result , comment : comment})
+            let user = 요청.user
+            응답.render('detail.ejs', { result : result , comment : comment , user : user})
             if(result == null){
                 응답.status(404).send('이상한 url 입력함.') 
             }
@@ -562,12 +577,28 @@ app.get('/manager', async(요청, 응답)=>{
 
 
 app.get('/make-chat', async(요청, 응답)=>{
-    await db.collection('chatroom').insertOne({
-        // member 안에 방문자_id와 작성자의_id 를 각각 저장
-        member : [요청.user._id, new ObjectId(요청.query.writerId)],
-        date : new Date()
+    let check = await db.collection('chatroom').findOne({
+        member : [요청.user._id, new ObjectId(요청.query.writerId)]
     })
-    응답.redirect('/mychat')
+    if(check == null){
+        check = await db.collection('chatroom').findOne({
+            member : [new ObjectId(요청.query.writerId) , 요청.user._id]
+        })
+        if(check == null){
+            await db.collection('chatroom').insertOne({
+                // member 안에 방문자_id와 작성자의_id 를 각각 저장
+                member : [요청.user._id, new ObjectId(요청.query.writerId)],
+                date : new Date()
+            })
+            응답.redirect('/mychat')
+        }
+        else{
+            응답.redirect('/mychat')
+        }
+    }
+    else{
+        응답.redirect('/mychat')
+    }
 })
 
 

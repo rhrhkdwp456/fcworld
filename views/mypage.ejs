@@ -17,26 +17,23 @@
   <% if(JSON.stringify(user._id) == JSON.stringify("65fd412ac56f245c840d41c3")){ %>
     <div class="manager" style="text-align: right;"><a href="/manager" style="text-decoration: none; color: blue; font-weight: bold; padding-right: 30px;">회원관리</a></div>
   <%} %>
-  <div class="white-bg mypage-box">
+  <div class="white-bg">
     
     <% for(let i =0; i< posts.length ;i++){ %>
-        <div class="list-box mypage-list">
-          <div class="mypage-list-title">
-            <p>
-              <a href="/detail/<%= posts[i]._id %>">
-                <%= posts[i].title %>
-              </a>
-            </p>
+          <div class="list-box mypage-list">
+            <div class="mypage-list-title">
+              <p>
+                <a href="/detail/<%= posts[i]._id %>">
+                  <%= posts[i].title %>
+                </a>
+              </p>
+            </div>
+            <div class="list-edit">
+              <a href="/edit/<%= posts[i]._id %>">✏️</a>
+              <span class="delete" data-id="<%= posts[i]._id %>">🗑️</span>
+            </div>
+            <img src="<%= posts[i].img %>">
           </div>
-          <div class="list-edit">
-            <a href="/edit/<%= posts[i]._id %>">✏️</a>
-            <span class="delete" data-id="<%= posts[i]._id %>">🗑️</span>
-          </div>
-            
-
-          
-          <img src="<%= posts[i].img %>">
-        </div>
     <% } %>
   </div>
   <script>

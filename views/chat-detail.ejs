@@ -61,8 +61,7 @@
         if(window.event.keyCode==13){
           let msg = document.querySelector('.chat-input').value
           socket.emit('message', { msg : msg , room : '<%= result._id %>'})
-          location.reload();
-          // window.scrollTo(0,99999)
+          location.reload()
         }
       }
 
@@ -84,9 +83,8 @@
         // 위에서한 저 ㅈㄹ을 한번에 해결 하는 방법
         // .chat-screen 찾아서 그거 끝나기 전에다가 html 추가하는 코드인듯. ` `(backtick) 표시 안에 넣으면 문자 중간에 변수값도 넣을 수 있음 그래서 ${data} 요런식으로 사용 가능
         document.querySelector('.chat-screen').insertAdjacentHTML('beforeend', `<div class="chat-box mine"><span>${data}</span></div>`)
-        location.reload();
-        
-
+        document.querySelector('.chat-input').value = null
+        location.reload()
       })
 
 
