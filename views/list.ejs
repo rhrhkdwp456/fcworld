@@ -16,8 +16,10 @@
     <!-- <%= JSON.stringify(userid) %> -->
     <!-- <%= JSON.stringify(posts) %> -->
     <div class="white-bg">
-      <div class="write-btn">
-        <button type="button" class="btn btn-primary"><a href="/write">글작성</a></button>
+      <div class="search-write">
+        <input class="search">
+        <button class="search-send">검색</button> 
+        <button type="button" class="btn btn-primary write-btn"><a href="/write">글작성</a></button>
       </div>
       
         
@@ -28,6 +30,7 @@
           location.href = '/search?val=' + 입력한검색어
         })
       </script>
+
       <% for(let i =0; i< posts.length ;i++){ %>
         <% if(JSON.stringify(userid) == JSON.stringify("65fd412ac56f245c840d41c3")){ %>
           <div class="list-box">

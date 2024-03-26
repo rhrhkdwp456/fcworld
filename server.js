@@ -22,7 +22,20 @@ const io = new Server(server)
 // npm install dotenv 설치
 require('dotenv').config()
 
+//ejs 셋팅 하는 코드
+app.set('view engine', 'ejs')
+// html 파일에 데이터를 넣고 싶으면 .ejs 파일로 만들어야 가능.
+// ejs파일은 꼭 views라는 폴더를 만들어서 생성.
 
+app.use(methodOverride('_method'))
+
+// 폴더를 server.js에 등록해두면 폴더안의 파일들 html에서 사용 가능.
+app.use(express.static(__dirname +'/public'))
+app.use(express.static(__dirname +'/img'))
+
+// 요청.body 쓰러면 필수적으로 작성해야 됨.
+app.use(express.json())
+app.use(express.urlencoded({extended:true})) 
 
 // passport 라이브러리 셋팅 시작
 const session = require('express-session')
@@ -33,30 +46,30 @@ const LocalStrategy = require('passport-local')
 const MongoStore = require('connect-mongo') 
 const e = require('express')
 
-const sessionMiddleware = session({
-    secret: process.env.MIDDLESESSION_PW,
-    resave: false,
-    saveUninitialized: false,
-  });
 
-
-app.use(sessionMiddleware);
 
 app.use(passport.initialize())
 app.use(session({
   secret: process.env.SESSION_PW , // 세션의 document id는 암호화해서 유저에게 보냄
   resave : false, // 유저가 서버로 요청할 때마다 세션 갱신할건지(보통은 false함.)
   saveUninitialized : false, // 로그인 안해도 세션 만들것인지(보통 false)
-  cookie : { maxAge : 60 * 60 * 1000 } ,// 세션 document 유효기간 변경 하는 코드(60*1000 -> 60초, 60*60*1000 -> 1시간)
+  cookie : { maxAge : 60* 60 * 1000 } ,// 세션 document 유효기간 변경 하는 코드(60*1000 -> 60초, 60*60*1000 -> 1시간)
   store : MongoStore.create({
     mongoUrl : process.env.DB_URL,
-    dbName : 'forum',
+    dbName : 'forum'
   })
 }))
 
 app.use(passport.session()) 
 // passport 라이브러리 셋팅 끝.
 
+const sessionMiddleware = session({
+    secret: process.env.MIDDLESESSION_PW,
+    resave: false,
+    saveUninitialized: false,
+  });
+
+app.use(sessionMiddleware);
 
 // multer 기본 라이브러리 셋팅
 const { S3Client } = require('@aws-sdk/client-s3')
@@ -79,21 +92,6 @@ const upload = multer({
     }
   })
 })
-
-app.use(methodOverride('_method'))
-
-// 폴더를 server.js에 등록해두면 폴더안의 파일들 html에서 사용 가능.
-app.use(express.static(__dirname +'/public'))
-app.use(express.static(__dirname +'/img'))
-
-//ejs 셋팅 하는 코드
-app.set('view engine', 'ejs')
-// html 파일에 데이터를 넣고 싶으면 .ejs 파일로 만들어야 가능.
-// ejs파일은 꼭 views라는 폴더를 만들어서 생성.
-
-// 요청.body 쓰러면 필수적으로 작성해야 됨.
-app.use(express.json())
-app.use(express.urlencoded({extended:true})) 
 
 
 // MongoDB 연결하기 위해 하는 셋팅
@@ -118,11 +116,9 @@ app.use('/register', null_check)
 function null_check(요청, 응답, next){
     if(!요청.body.usersname ){
         console.log('빈칸으로 제출하지마시오.')
-
     }
     else if(!요청.body.passward){
         console.log('빈칸으로 제출하지마시오.')
-
     }
     next()
 }
@@ -166,7 +162,7 @@ passport.use(new LocalStrategy(async (입력한아이디, 입력한비번, cb) =
     if (!result) {
       return cb(null, false, { message: '아이디 DB에 없음' })
     }
-    console.log(await bcrypt.compare(입력한비번, result.password))
+
     if (await bcrypt.compare(입력한비번, result.password)) {
       return cb(null, result)
     } else {
@@ -178,7 +174,7 @@ passport.use(new LocalStrategy(async (입력한아이디, 입력한비번, cb) =
 // 세션 document에 들어갈 내용들을 보내줌.
 passport.serializeUser((user, done) =>{
     process.nextTick(() => { // 내부 코드를 비동기적으로 처리해줌
-        done(null, { id : user._id , username: user.username })
+        done(null, { id : user._id , userid: user.userid })
     })
 })
 
@@ -190,7 +186,7 @@ passport.deserializeUser(async (user, done) =>{
     let result = await db.collection('user').findOne({_id: new ObjectId(user.id)})
     delete result.password // 비번은 삭제
     process.nextTick(() => { // 내부 코드를 비동기적으로 처리해줌
-        return done(null, result) // result에 저장된 값이 요청.user에 들어감.
+        done(null, result) // result에 저장된 값이 요청.user에 들어감.
     })
 })
 
@@ -198,12 +194,14 @@ passport.deserializeUser(async (user, done) =>{
 
 app.get('/', async(요청, 응답)=>{
     let result = await db.collection('post').find().limit(3).toArray()
+    let user = 요청.user
+    console.log(user)
     if(요청.user == undefined){
         응답.sendFile(__dirname+'/index.html')
     }
     else{
         
-        응답.render('index_login.ejs', {result: result})
+        응답.render('index_login.ejs', {result: result, user:user})
     }
 })
 
@@ -212,11 +210,12 @@ app.get('/', async(요청, 응답)=>{
 // __dirname -> 현재 프로젝트 절대 경로 의미.(server.js가 담긴 폴더)
 app.get('/home', async(요청,응답)=>{
     let result = await db.collection('post').find().limit(3).toArray()
+    let user = 요청.user
     if(요청.user == undefined || 요청.user.authority == "0"){
         응답.sendFile(__dirname+'/index.html')
     }   
     else{
-        응답.render('index_login.ejs', { result : result })
+        응답.render('index_login.ejs', { result : result , user:user})
     }
 })
 
@@ -286,6 +285,8 @@ app.post('/add', upload.single('img1'), async (요청, 응답) => {
     }
     
 })
+
+
 
 app.get('/detail/:id', async (요청, 응답) => {
     try{
@@ -465,11 +466,11 @@ app.post('/register' , async(요청, 응답)=>{
     // 기존의 비밀번호를 해싱을 해서 암호화 하는 작업.
     let result = await db.collection('user').findOne({ userid : 요청.body.userid })  
 
-    if(요청.body.userid == '' || 요청.body.username == '' || 요청.body.nickname == ''){
-        console.log("입력되지 않은 칸이 있습니다. 다시 확인해주세요.")
+    if(요청.body.userid == '' || 요청.body.username == '' || 요청.body.password == ''){
+        응답.send('입력되지 않은 칸이 있습니다. 다시 확인해주세요.')
     }
     else if(요청.body.password != 요청.body.password_check){
-        console.log('비밀번호가 일치하지 않습니다. 다시 확인해주세요.')
+        응답.send('입력되지 않은 칸이 있습니다. 다시 확인해주세요.')
     }
     else if(!result){
         await db.collection('user').insertOne({ 
@@ -482,7 +483,7 @@ app.post('/register' , async(요청, 응답)=>{
         응답.redirect('/')
     }
     else{
-        console.log("이미 존재하는 아이디입니다. 다시 입력해주세요.")
+        응답.send('이미 존재하는 아이디입니다. 다시 입력해주세요.')
     } 
 
 })
@@ -562,6 +563,8 @@ app.post('/comment', async (요청, 응답) => {
 app.get('/chat-detail', async(요청, 응답)=>{
     응답.render('chat-detail.ejs')
 })
+
+
 
 app.get('/manager', async(요청, 응답)=>{
     if(요청.user == undefined || 요청.user.authority == "normal" || 요청.user.authority == "FC" ){
@@ -723,13 +726,38 @@ io.on('connection', (socket)=>{
     })
 })
 
-// app.get("/logout", (요청, 응답) => {
-//     const sessionId = 요청.user._id
-  
-//     요청.session.destroy(() => {
-//       // disconnect all Socket.IO connections linked to this session ID
-//       io.in(sessionId).disconnectSockets();
-//       응답.status(204).end();
-//       응답.render('login.ejs')
-//     });
-//   });
+app.get("/logout", function(req, res) {
+    req.logout(()=>{
+        res.redirect('/')
+    })
+});
+
+
+// app.get('/code-post/:id', async(요청, 응답)=>{
+//     console.log("hi")
+//     let result = await db.collection('code').find().toArray()
+//     응답.render('code-list.ejs', {result : result})
+// })
+
+// app.post('/add/code', async (요청, 응답) => {
+//     try{
+//         if(요청.body.title=='' || 요청.body.content == ''){
+//             응답.send('내용 전부 입력안했는데?')
+//         }else{
+//             await db.collection('code').insertOne(
+
+//                 { 
+//                     title : 요청.body.title, 
+//                     content : 요청.body.content, 
+//                     user : 요청.user._id,
+//                     username : 요청.user.username,
+//                 }
+//             )
+//             응답.redirect('/code-list')
+//         }
+//     } catch(e){
+//         console.log(e)
+//         응답.status(500).send('서버에러남')
+//     }
+    
+// })
