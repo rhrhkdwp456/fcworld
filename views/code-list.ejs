@@ -13,16 +13,17 @@
 <body class="grey-bg">
     <!-- 재사용이 많은 ui 같은 경우 따로 ejs파일로 만들고 밑에 방식으로 간단하게 추가함. -->
     <%- include('nav_login.ejs') %>
-    <div class="white-bg">
-
+    <a class = "make-code" href="/code-post">코드 작성하기</a>
+    <div class="white-bg-code">
+    
       <% for(let i =0; i< result.length ;i++){ %>
           <div class="list-box">
             <div class="code-box">
-              <a class="list-title" href="/detail/<%= result[i]._id %>">
+              <a class="list-title" href="/code-detail/<%= result[i]._id %>">
                 <%= result[i].title %>
               </a>
-              <a href="/edit/<%= posts[i]._id %>">✏️</a>
-              <span class="delete" data-id="<%= posts[i]._id %>">🗑️</span>
+              <a href="/edit/<%= result[i]._id %>">✏️</a>
+              <span class="delete" data-id="<%= result[i]._id %>">🗑️</span>
             </div>
             <p><%= result[i].content %></p>
           </div>
@@ -34,7 +35,7 @@
       var totalDelete = document.querySelectorAll('.delete').length;
       for( i = 0;i < totalDelete  ; i++){
         document.querySelectorAll('.delete')[i].addEventListener('click', function(e){
-          fetch('/delete?docid=' + e.target.dataset.id, {
+          fetch('/code-delete?docid=' + e.target.dataset.id, {
             method : 'DELETE',
             })
           .then((r)=> r.text()) 

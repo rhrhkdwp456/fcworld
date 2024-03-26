@@ -194,14 +194,12 @@ passport.deserializeUser(async (user, done) =>{
 
 app.get('/', async(요청, 응답)=>{
     let result = await db.collection('post').find().limit(3).toArray()
-    let user = 요청.user
-    console.log(user)
     if(요청.user == undefined){
         응답.sendFile(__dirname+'/index.html')
     }
     else{
         
-        응답.render('index_login.ejs', {result: result, user:user})
+        응답.render('index_login.ejs', {result: result})
     }
 })
 
@@ -210,12 +208,11 @@ app.get('/', async(요청, 응답)=>{
 // __dirname -> 현재 프로젝트 절대 경로 의미.(server.js가 담긴 폴더)
 app.get('/home', async(요청,응답)=>{
     let result = await db.collection('post').find().limit(3).toArray()
-    let user = 요청.user
     if(요청.user == undefined || 요청.user.authority == "0"){
         응답.sendFile(__dirname+'/index.html')
     }   
     else{
-        응답.render('index_login.ejs', { result : result , user:user})
+        응답.render('index_login.ejs', { result : result })
     }
 })
 
@@ -378,6 +375,16 @@ app.delete('/user-delete', async(요청, 응답)=>{
         응답.send('삭제완료')
     }
     
+    
+})
+
+app.delete('/code-delete', async(요청, 응답)=>{
+
+        await db.collection('code').deleteOne({
+            _id : new ObjectId(요청.query.docid), // 게시글 아이디 확인
+            user : new ObjectId(요청.user._id) // 본인이 쓴글인지 확인
+            })
+        응답.send('삭제완료')
     
 })
 
@@ -732,32 +739,48 @@ app.get("/logout", function(req, res) {
     })
 });
 
+app.get('/code-list', async(요청, 응답)=>{
+    let result = await db.collection('code').find({
+        user: 요청.user._id
+    }).toArray()
+    응답.render('code-list.ejs', {result : result})
+})
 
-// app.get('/code-post/:id', async(요청, 응답)=>{
-//     console.log("hi")
-//     let result = await db.collection('code').find().toArray()
-//     응답.render('code-list.ejs', {result : result})
-// })
+app.get('/code-post', async(요청, 응답)=>{
+    응답.render('code-post.ejs')
+})
 
-// app.post('/add/code', async (요청, 응답) => {
-//     try{
-//         if(요청.body.title=='' || 요청.body.content == ''){
-//             응답.send('내용 전부 입력안했는데?')
-//         }else{
-//             await db.collection('code').insertOne(
+app.get('/code-detail/:id', async(요청, 응답)=>{
+    let result = await db.collection('code').findOne({
+        _id : new ObjectId(요청.params.id)
+    })
 
-//                 { 
-//                     title : 요청.body.title, 
-//                     content : 요청.body.content, 
-//                     user : 요청.user._id,
-//                     username : 요청.user.username,
-//                 }
-//             )
-//             응답.redirect('/code-list')
-//         }
-//     } catch(e){
-//         console.log(e)
-//         응답.status(500).send('서버에러남')
-//     }
+    응답.render('code-detail.ejs',{result:result})
+})
+
+app.post('/add/code', async (요청, 응답) => {
+    let user = 요청.user
+    let result = await db.collection('code').find({
+        user : 요청.user._id
+    }).toArray()
+    try{
+        if(요청.body.title=='' || 요청.body.content == ''){
+            응답.send('내용 전부 입력안했는데?')
+        }else{
+            await db.collection('code').insertOne(
+
+                { 
+                    title : 요청.body.title, 
+                    content : 요청.body.content, 
+                    user : 요청.user._id,
+                    username : 요청.user.username,
+                }
+            )
+            응답.redirect('/code-list')
+        }
+    } catch(e){
+        console.log(e)
+        응답.status(500).send('서버에러남') 
+    }
     
-// })
+})
