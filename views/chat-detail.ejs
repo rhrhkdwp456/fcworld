@@ -13,29 +13,26 @@
 <body class="grey-bg">
     <%- include('nav_login.ejs') %>
 
-    <!-- <%= JSON.stringify(result) %> -->
-    <!-- <%= JSON.stringify(chatcontent[0]) %> -->
     <div class="detail-bg">
-        <div class="chat-screen">
-          <% for(let i =0; i< chatcontent.length; i++){ %>
-            <% if(JSON.stringify(chatcontent[i].writer) == JSON.stringify(user) ){ %>
-              <div class="chat-name mine"><span><%= myname %></span></div>
-              <div class="chat-box mine" ><span><%= chatcontent[i].content %></span></div>
-              <div class="chat-box mine date"><%= chatcontent[i].date %></div>
-            <% } else{ %>
-              <div class="chat-name"><span><%= opponent %></span></div>
-              <div class="chat-box"><span><%= chatcontent[i].content %></span></div>
-              <div class="chat-box date" ><%=chatcontent[i].date %></div>
-            <% } %>
+      <div class="chat-screen">
+        <% for(let i =0; i< chatcontent.length; i++){ %>
+          <% if(JSON.stringify(chatcontent[i].writer) == JSON.stringify(user) ){ %>
+            <div class="chat-name mine"><span><%= myname %></span></div>
+            <div class="chat-box mine" ><span><%= chatcontent[i].content %></span></div>
+            <div class="chat-box mine date"><%= chatcontent[i].date %></div>
+          <% } else{ %>
+            <div class="chat-name"><span><%= opponent %></span></div>
+            <div class="chat-box"><span><%= chatcontent[i].content %></span></div>
+            <div class="chat-box date" ><%=chatcontent[i].date %></div>
           <% } %>
+        <% } %>
 
-        </div>
       </div>
-      <div class="chat-form">
-        <input class="chat-input" onkeyup="enterkey()" style="width: 500px;">
-        <button class="chat-button">전송</button>
-      </div> 
-    
+    </div>
+    <div class="chat-form">
+      <input class="chat-input" onkeyup="enterkey()" style="width: 500px;">
+      <button class="chat-button">전송</button>
+    </div> 
     <!-- socket 셋팅 -->
     <script src="https://cdn.jsdelivr.net/npm/socket.io@4.7.2/client-dist/socket.io.min.js"></script>
     <script>
@@ -61,7 +58,6 @@
         if(window.event.keyCode==13){
           let msg = document.querySelector('.chat-input').value
           socket.emit('message', { msg : msg , room : '<%= result._id %>'})
-          location.reload()
         }
       }
 
@@ -82,9 +78,17 @@
 
         // 위에서한 저 ㅈㄹ을 한번에 해결 하는 방법
         // .chat-screen 찾아서 그거 끝나기 전에다가 html 추가하는 코드인듯. ` `(backtick) 표시 안에 넣으면 문자 중간에 변수값도 넣을 수 있음 그래서 ${data} 요런식으로 사용 가능
-        document.querySelector('.chat-screen').insertAdjacentHTML('beforeend', `<div class="chat-box mine"><span>${data}</span></div>`)
-        document.querySelector('.chat-input').value = null
-        location.reload()
+        
+        
+        // 만일 내가 보낸 데이터를 수신한거면 mine 붙이고 그게 아닌경우는 안붙이도록 조건문 짜야됨.
+        if(JSON.stringify(data.user) == JSON.stringify("<%=user%>")){
+          document.querySelector('.chat-screen').insertAdjacentHTML('beforeend', `<div class="chat-box mine"><span>${data.data}</span></div>`)
+          document.querySelector('.chat-input').value = null
+        }
+        else{
+          document.querySelector('.chat-screen').insertAdjacentHTML('beforeend', `<div class="chat-box"><span>${data.data}</span></div>`)
+        }
+        
       })
 
 

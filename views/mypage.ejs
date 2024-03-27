@@ -13,26 +13,33 @@
 <body class="grey-bg">
     <!-- 재사용이 많은 ui 같은 경우 따로 ejs파일로 만들고 밑에 방식으로 간단하게 추가함. -->
   <%- include('nav_login.ejs') %>
-  <div class="myname"><%= user.username %>님 환영합니다.</div>
+  <div class="mypage-box">
+    <div class="myname"><%= user.username %>님 환영합니다.</div>
   <% if(JSON.stringify(user._id) == JSON.stringify("65fd412ac56f245c840d41c3")){ %>
-    <div class="manager" style="text-align: right;"><a href="/manager" style="text-decoration: none; color: blue; font-weight: bold; padding-right: 30px;">회원관리</a></div>
+    <div class="manager" style= "margin-left: 20px;">
+      <button type="button" class="btn btn-primary"><a href="/manager" style="text-decoration: none; color: white;"">회원관리</a></button>
+      
+    </div>
+  </div>
+
   <%} %>
   <div class="white-bg-mypage">
     
     <% for(let i =0; i< posts.length ;i++){ %>
           <div class="list-box mypage-list">
             <div class="mypage-list-title">
-              <p>
                 <a href="/detail/<%= posts[i]._id %>">
                   <%= posts[i].title %>
                 </a>
-              </p>
             </div>
             <div class="list-edit">
               <a href="/edit/<%= posts[i]._id %>">✏️</a>
               <span class="delete" data-id="<%= posts[i]._id %>">🗑️</span>
             </div>
-            <img src="<%= posts[i].img %>">
+            <a href="/detail/<%= posts[i]._id %>">
+              <img src="<%= posts[i].img %>">
+            </a>
+            
           </div>
     <% } %>
   </div>

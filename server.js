@@ -9,13 +9,12 @@ const methodOverride = require('method-override')
 const bcrypt = require('bcrypt')
 
 // socket 라이브러리 셋팅
-// const { createServer } = require('http')
-
-const { createServer } = require("node:http")
+const { createServer } = require("http");
 const { Server } = require('socket.io')
-const { join } = require("node:path")
+const { join } = require("path");
 const server = createServer(app)
 const io = new Server(server) 
+
 
 
 // 환경변수 따로 파일로 만들기.
@@ -67,9 +66,19 @@ const sessionMiddleware = session({
     secret: process.env.MIDDLESESSION_PW,
     resave: false,
     saveUninitialized: false,
+    cookie: {
+        maxAge : 60*60*1000,
+        secure : false,
+        sameSite:'strict'
+    },
+    store: MongoStore.create({
+        mongoUrl : process.env.DB_URL,
+        dbName : 'forum'
+    })
   });
 
 app.use(sessionMiddleware);
+
 
 // multer 기본 라이브러리 셋팅
 const { S3Client } = require('@aws-sdk/client-s3')
@@ -96,11 +105,11 @@ const upload = multer({
 
 // MongoDB 연결하기 위해 하는 셋팅
 let connectDB = require('./database.js')
+const { render } = require('ejs')
 
 let db;
 const url = process.env.DB_URL
 new MongoClient(url).connect().then((client)=>{
-  console.log('DB연결성공')
   db = client.db('forum');
   server.listen(process.env.PORT, () => {
         console.log('http://localhost:8080 에서 실행 중')
@@ -397,10 +406,10 @@ app.get('/authority', async(요청,응답)=>{
         응답.redirect('back')
 })
 
-app.delete('/chat/delete', async(요청, 응답)=>{
+app.delete('/chatroom/delete', async(요청, 응답)=>{
 
     await db.collection('chatroom').deleteOne({
-        _id : new ObjectId(요청.query.docid), // 게시글 아이디 확인
+        _id : new ObjectId(요청.query.docid), 
         })
     응답.send('삭제완료')
     
@@ -567,9 +576,9 @@ app.post('/comment', async (요청, 응답) => {
     응답.redirect('back') // 이전페이지로 이동.
 })
 
-app.get('/chat-detail', async(요청, 응답)=>{
-    응답.render('chat-detail.ejs')
-})
+// app.get('/chat-detail', async(요청, 응답)=>{
+//     응답.render('chat-detail.ejs')
+// })
 
 
 
@@ -696,6 +705,7 @@ app.get('/mychat/:id', async(요청, 응답)=>{
         }
     }
 })
+
 io.engine.use(sessionMiddleware)
 
 // 웹소켓 연결되면 실행되는 코드
@@ -729,7 +739,7 @@ io.on('connection', (socket)=>{
         })
 
         // 특정 룸에 데이터 뿌리기
-        io.to(data.room).emit('broadcast', data.msg)
+        io.to(data.room).emit('broadcast', {data : data.msg, user : new ObjectId(socket.request.session.passport.user.id)})
     })
 })
 

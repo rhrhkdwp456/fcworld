@@ -188,19 +188,30 @@ input,div {
   border-radius: 5px;
 }
 .myname{
+  margin-left: 20px;
   font-weight: bold;
-  font-size: 20px;
-  padding-right: 30px;
-  text-align: right;
+  font-size: 25px;
+
 }
 .mypage-box{
   width: auto;
   display: flex;
   Flex-wrap: nowrap;
   flex: 1;
+  padding-bottom: 20px;
+  border-bottom: solid 3px grey;
 }
 
-.mypage-list-title p{
+.mypage-list{
+  max-width: 400px;
+}
+.mypage-list img{
+  max-width: 600px;
+  max-height: 600px;
+  padding : 10px;
+  border-bottom: 1px solid#eee;
+}
+.mypage-list-title{
   font-weight: bold;
   font-size: 20px;
   max-width: 200px;
@@ -208,6 +219,7 @@ input,div {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .mypage-list-title a{
   color: black;
 }
@@ -285,4 +297,59 @@ ul.list::after {
   background: white;
   margin: 20px;
   border-radius: 5px;
+}
+.make-code{
+  color: #fff;
+  border-radius: 5px;
+  text-decoration: none;
+}
+.white-bg-code{
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+    background: white;
+    margin: 20px;
+    border-radius: 5px;
+  
+}
+.code-title{
+  display: flex;
+  
+}
+.code-title button{
+  border-radius: 5px;
+  border: none;
+  background-color: #2978B5;
+  color: white;
+  font-weight: bold;
+}
+.media-content-box{
+  width: 100%;
+  display: none;
+}
+@media (max-width : 600px){
+  .content-parent{
+    display: none;
+  }
+  .content{
+    margin: 0;
+    width: 100%;
+  }
+  .content-box{
+    margin: 0;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+  }
+  .container ul{
+    width: auto;
+    font-size: 13px;
+  }
+  .media-content-box{
+    display: block;
+  }
+  .myname{
+    font-size: 20px;
+  }
 }

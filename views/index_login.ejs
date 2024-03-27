@@ -20,14 +20,17 @@
                 <div class="content-parent">
                     <% for(let i = 0;i< result.length ;i++){ %>
                         <div class="content-box">
-                            <h4 style="font-weight: bold;"><% result[i].title %></h4>
-                            <br>
                             <a href="/detail/<%= result[i]._id %>" style="text-decoration: none;"><img src="<%= result[i].img %>" style="object-fit:fill;"></a>
                         </div>
                     <% } %>
                 </div>
+                <div class="media-content-box">
+                    <div class="content-box">
+                        <a href="/detail/<%= result[0]._id %>" style="text-decoration: none;"><img src="<%= result[0].img %>" style="object-fit:fill;"></a>
+                    </div>
+                </div>
             </div>
-            <div class = "container mt-5">  
+            <div class = "container">  
                 <form class="container my-5 form-group">
                     <h4 style="font-weight: bold;">랭킹</h4>
     
