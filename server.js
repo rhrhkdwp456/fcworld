@@ -332,33 +332,45 @@ app.get('/code/edit/:id', async(요청, 응답)=>{
 })
 
 app.put('/edit', async (요청, 응답) => {
-    try{
-        await db.collection('post').updateOne({ 
-            _id : new ObjectId(요청.body.id),
-            user : new ObjectId(요청.user._id) //본인이 쓴글인지 확인
-        },
-        {$set : { title : 요청.body.title, content : 요청.body.content}
-        })
-        응답.redirect('/list')
-    }catch(e){
-        console.log(e)
-        응답.status(404).send('이상한 url 입력함.') 
+    if(요청.user == undefined || 요청.user.authority == "normal"){
+        응답.render('login.ejs')
     }
+    else{
+        try{
+            await db.collection('post').updateOne({ 
+                _id : new ObjectId(요청.body.id),
+                user : new ObjectId(요청.user._id) //본인이 쓴글인지 확인
+            },
+            {$set : { title : 요청.body.title, content : 요청.body.content}
+            })
+            응답.redirect('/list')
+        }catch(e){
+            console.log(e)
+            응답.status(404).send('이상한 url 입력함.') 
+        }
+    }
+    
 })
 
 app.put('/code-edit', async (요청, 응답) => {
-    try{
-        await db.collection('code').updateOne({ 
-            _id : new ObjectId(요청.body.id),
-            user : new ObjectId(요청.user._id) //본인이 쓴글인지 확인
-        },
-        {$set : { title : 요청.body.title, content : 요청.body.content}
-        })
-        응답.redirect('/code-list')
-    }catch(e){
-        console.log(e)
-        응답.status(404).send('이상한 url 입력함.') 
+    if(요청.user == undefined || 요청.user.authority == "normal"){
+        응답.render('login.ejs')
     }
+    else{
+        try{
+            let result = await db.collection('code').updateOne({ 
+                _id : new ObjectId(요청.body.id),
+                user : new ObjectId(요청.user._id) //본인이 쓴글인지 확인
+            },
+            {$set : { title : 요청.body.title, content : 요청.body.content}
+            })
+            응답.redirect('/code-list')
+        }catch(e){
+            console.log(e)
+            응답.status(404).send('이상한 url 입력함.') 
+        }
+    }
+    
 })
 
     // await db.collection('post').updateOne({ _id : 1 }, {$inc : {like : 2}}) // inc -> 값을 + - 하는 문법
