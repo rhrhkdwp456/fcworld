@@ -13,13 +13,13 @@
     <%- include('nav_login.ejs') %>
     
 
-    <form class="form-box" action="/edit?_method=PUT" method="POST">
+    <form class="form-box" action="/code-edit?_method=PUT" method="POST">
         <h4>수정하기</h4>
         <input name= "id" value="<%= result._id %>" style="display: none;">
         <input name = "title" value="<%= result.title %>">
-        <input name = "content" value="<%= result.content %>">
+        <!-- <input name = "content" value="<%= result.content %>"> -->
+        <textarea name="content" style = "width: 100%; height: 200px;"><%= result.content %> </textarea>
         <button type="submit">전송</button>
     </form> 
-
   </body>
 </html>
